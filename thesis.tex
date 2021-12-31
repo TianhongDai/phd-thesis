@@ -2,10 +2,29 @@
 \documentclass[a4paper,12pt,twoside]{report}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
 % package that will be used
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{dsfont}
+\usepackage[super]{nth}
+\usepackage{etoolbox}
+\usepackage{hyperref}
+
+% declare math operator
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\clip}{clip}
+% new command
+\newcommand\Tau{\mathcal{T}}
+
 
 \include{thesis.preamble}
-
-
+% begin the document
 \begin{document}
 
 \title{\LARGE {\bf Sample Efficient Deep Reinforcement Learning and Related Application}\\
@@ -27,6 +46,7 @@
 \body
 \input{introduction/introduction}
 \input{background/background}
+\input{chapters/chapter3}
 
 % body of thesis comes here
 
@@ -37,7 +57,7 @@
 
 
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{alpha}
+\bibliographystyle{apalike}
 \bibliography{bibliography/bibliography}
 
 \end{document}
