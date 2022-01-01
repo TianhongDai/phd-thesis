@@ -325,5 +325,5 @@ Table~\ref{tab:time} gives example training times of all of the HER-based algori
     \label{tab:time}
 \end{table}
 
-\section{Conclusion}
+\section{Discussion}
 In this paper, we introduced diversity-based trajectory and goal selection with hindsight experience replay (DTGSH) to improve the learning efficiency of goal-orientated RL agents in the sparse reward setting. Our method can be divided into two stages: 1) valuable trajectories are selected according to diversity-based priority, as modelled by determinantal point processes (DPPs)~\cite{kulesza2012determinantal}; 2) $k$-DPPs~\cite{kulesza2011k} are leveraged to sample transitions with diverse goal states from previously selected trajectories for training. Our experiments empirically show that DTGSH achieves faster learning and higher final performance in five challenging robotic manipulation tasks, compared to previous state-of-the-art approaches~\cite{NIPS2017_453fadbd,fang2019curriculum,zhao2018energy}. Furthermore, unlike prior extensions of hindsight experience replay, DTGSH does not require semantic knowledge of the goal space~\cite{zhao2018energy}, and does not require tuning a curriculum~\cite{fang2019curriculum}.
