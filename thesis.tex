@@ -1,48 +1,67 @@
-
 \documentclass[a4paper,12pt,twoside]{report}
-\usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
+\usepackage[left=2.5cm,right=2.5cm,top=2cm,bottom=3cm]{geometry}
 % package that will be used
 \usepackage{booktabs}       % professional-quality tables
-\usepackage{amsfonts}       % blackboard math symbols
+%\usepackage{amsfonts}       % blackboard math symbols
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
 \usepackage{algorithm}
 \usepackage{algorithmic}
+%\usepackage{algorithmicx}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{dsfont}
 \usepackage[super]{nth}
 \usepackage{etoolbox}
-\usepackage{hyperref}
+%\usepackage{hyperref}
 \usepackage{subcaption}
+\usepackage{amsmath,amsthm,amscd,amsbsy,amssymb,latexsym,url,bm}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{multicol}
+\usepackage{breakcites}
+\usepackage{xcolor}
+\usepackage{pifont}
+\usepackage[figuresright]{rotating}
+\usepackage[hidelinks,colorlinks=true,linkcolor=blue,citecolor=blue]{hyperref}
+\usepackage{mathpazo}
+%\usepackage{eulervm}
+
+%\usepackage{algpseudocode}
 
 % declare math operator
 \DeclareMathOperator{\sgn}{sgn}
 \DeclareMathOperator{\clip}{clip}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator*{\argmax}{\arg\!\max}
 % new command
 \newcommand\Tau{\mathcal{T}}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
-
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+\newcommand{\td}[1]{\textcolor{red}{#1}}
 
 \include{thesis.preamble}
 % begin the document
+
 \begin{document}
 
-\title{\LARGE {\bf Sample Efficient Deep Reinforcement Learning and Related Application}\\
+\title{\LARGE {\bf Improving Sample Efficiency in Deep Reinforcement Learning}\\
  \vspace*{6mm}
 }
 
 \author{Tianhong Dai}
-\submitdate{December 2021}
+\submitdate{April, 2022}
 
 \normallinespacing
 \maketitle
 
 \preface
+\input{dedication/dedication}
+\input{dedication/copyright}
 \input{abstract/abstract}
 \input{acknowledgements/acknowledgements}
-\input{dedication/dedication}
 \input{quotes/quotes}
 
 \body
@@ -50,17 +69,16 @@
 \input{background/background}
 \input{chapters/chapter3}
 \input{chapters/chapter4}
-
-% body of thesis comes here
-
+\input{chapters/chapter5}
+\input{chapters/chapter_tmp}
 \input{conclusion/conclusion}
 
 \appendix
 % appendices come here
 
-
 \addcontentsline{toc}{chapter}{Bibliography}
-\bibliographystyle{apalike}
+%\bibliographystyle{apalike}
+\bibliographystyle{ieeetr}
 \bibliography{bibliography/bibliography}
 
 \end{document}

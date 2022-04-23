@@ -21,13 +21,16 @@
   \vskip 0.3in
   \par
   {\Large \@author}
-  \vskip 4in
+  \vskip 3.0in
+  \par
+  {\large Supervised by Prof. Anil Anthony Bharath}
+  \vskip 1.0in
   \par
   Submitted in part fulfilment of the requirements for the degree of 
   \linebreak
-  Doctor of Philosophy in Bioengineering of Imperial College London and
+  Doctor of Philosophy of Imperial College London and
   \linebreak
-  the Diploma of Imperial College, \@submitdate
+  the Diploma of Imperial College London, \@submitdate
   \vfil
   \end{titlepage}
 }
@@ -77,7 +80,7 @@
 \newenvironment{dedication}{
   \cleardoublepage
   \begin{center}{
-    \large \bf Dedication}
+    \large \bf Statement of Originality}
   \end{center}
   \small
   \linespread{1.5}
@@ -87,8 +90,22 @@
   \par
 }
 
+\newenvironment{mycopyright}{
+  \cleardoublepage
+  \begin{center}{
+    \large \bf Copyright Declaration}
+  \end{center}
+  \small
+  \linespread{1.5}
+  \normalsize
+}{\cleardoublepage}
+\def\endmycopyright{
+  \par
+}
+
 \def\preface{
-    \pagenumbering{roman}
+    %\pagenumbering{roman}
+    \pagenumbering{arabic}
     \pagestyle{plain}
     \doublespacing
 }
@@ -108,7 +125,7 @@
     \pagestyle{plain}
     \cleardoublepage
     \pagestyle{uheadings}
-    \pagenumbering{arabic}
+    %\pagenumbering{arabic}
     \doublespacing
 }
 

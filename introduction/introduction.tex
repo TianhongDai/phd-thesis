@@ -1,22 +1,85 @@
-
 \chapter{Introduction}
 
-\section{Motivation and Objectives}
 
-Motivation and Objectives here.
+% TODO List:
+% Focus on two parts: sample efficiency (sparse reward setting and general exploration strategy), interperbility.
 
+% chang the title of subsection 1.2 -> general exploration strategies in DRL (-> intrinsic motivation... -> we propose a method based on intrinisc).
 
+% Finally, we discuss the interperbility stuff.
 
-\section{Contributions}
+\label{chapter1}
+%\section{Reinforcement Learning}
+\textit{Reinforcement Learning} (RL) is a machine learning method that aims to solve sequential decision-making problems with a trial-and-error scheme~\cite{sutton2018reinforcement}. In RL, an agent needs to interact with the environment to get a reward signal, thus adjusting its behaviour (policy) to maximise the accumulated rewards. In contrast to the other two machine learning paradigms: \textit{supervised learning} and \textit{unsupervised learning}, RL needs to find the optimal behaviour using the experiences of an agent instead of labelled training data, and the ultimate goal of RL is to maximise the accumulated rewards of an agent from the environment, rather than finding a specific hidden structure of data.
 
-Contributions here.
+% reinforcement learning histroy
+In recent years, with the success of deep learning (DL) and rapid iteration of computer hardware (e.g., Graphic Processing Unit (GPU)), deep neural networks have significantly improved the state-of-the-art in computer vision, such as for object classification~\cite{krizhevsky2012imagenet} and detection~\cite{ren2015faster}. \td{Incorporating deep neural networks with RL is a common approach}, which is capable of scaling to previously unsolved problems with high-dimensional inputs (e.g., images), and this learning paradigm is known as deep reinforcement learning (DRL). \td{Some other methods~\cite{guo2016k} reduce the dimension of inputs by adopting clustering algorithms.}
 
+Deep reinforcement learning has demonstrated its impressive performance in controlling the agent in complex environments. For example, in 2015, DeepMind proposed the deep Q-network (DQN)~\cite{mnih2015human} which enabled the agent to outperform previous RL algorithms on Atari 2600 games and achieve comparable results to professional human players by only receiving the image of a game screen as the inputs. In 2016, AlphaGo~\cite{silver2016mastering} defeated the world-famous Go player Mr. Lee Sedol. In 2019, DRL also successfully addressed one of the most challenging real-time strategy (RTS) games - StarCraft II~\cite{vinyals2019grandmaster} and multiplayer online battle arena (MOBA) games - DOTA2~\cite{berner2019dota} which exhibited the potential of using DRL to tackle scientific and real-world problems. In addition to the milestone achievements above, DRL is also utilised as a solution in some other scenarios, such as dexterous robot manipulation~\cite{andrychowicz2020learning}, autonomous driving~\cite{kiran2021deep}, and urban traffic signal control~\cite{wu2020multi}. However, some existing challenges may become obstacles to impede people from using RL in real-world applications. 
 
-\section{Statement of Originality}
+One crucial challenge is sample/data efficiency. Sample efficiency indicates the number of experiences/samples that an agent needs to collect in an environment to reach a certain performance level. Like DL, DRL also requires large amounts of interaction data to train the agent, which can lead to unacceptable costs in real-world applications. For example, even for training agents in a video game, such as StarCraft II, \td{16 Tensor Processing Units (TPUs) over 14 days were required} to complete the training (approximately 200 years of \td{human rate} StarCraft II play)~\cite{vinyals2019grandmaster}. Therefore, improving the sample efficiency of DRL algorithms is an important research direction for the community. 
 
-Statement here.
+In this thesis, we mainly focus on overcoming some problems that lead to sample inefficiency in DRL. The proposed methods and investigation are based on the following three aspects: 1) solving DRL with a sparse reward setting, 2) improving general exploration strategies in DRL, and 3) generalisation and interpretability of DRL.
 
+\section{DRL with Sparse Reward}
+In RL, the goal or skills that the agent is expected to learn can be formalised into a specific reward function~\cite{sutton2018reinforcement}. The purpose of reward shaping is to design a task-specific reward function towards known optimal behaviours, and this usually incorporates domain knowledge and hand-crafted design. For example, in a locomotion task, a two-legged robot is required to move forward, and the reward function can be designed as~\cite{lee2018composing}:
+\begin{align}
+\mathcal{R}(s_{t}, a_{t}) = & \lambda_{\text{vel}}\cdot |v_{\text{x}} - v_{\text{target}}| + \lambda_{\text{alive}} - \lambda_{\text{height}}\cdot |1.1 - \min (1.1, \Delta h)| \\
+        & + \lambda_{\text{angle}}\cdot \cos (\theta) \lambda_{\text{foot}}(v_{\text{left\_foot}} - v_{\text{right\_foot}}), \nonumber
+\label{eq:designed_reward_function}
+\end{align}
+where $v_{x}$, $v_{\text{left\_foot}}$ and $v_{\text{right\_foot}}$ are the forward velocity, right foot angular velocity, left foot angular velocity. $\Delta h$ is the height between the foot and the torso. $\theta$ is the angle of the torso. $\lambda_{*}$ are the hyperparameters for the task. Therefore, even for simple moving forward behaviour, a complicated reward function needs to be designed, and this reward function cannot be generalised across different tasks and morphology of the robot. Furthermore, ill-designed reward functions usually lead to unexpected behaviors~\cite{riedmiller2018learning} and limit exploration. 
 
+Sparse reward functions can alleviate the complexity of design, where the non-negative reward is only given when the agent reaches a specific goal. However, sparse reward functions also mean that the agent rarely achieves a non-negative reward, and this affects the efficiency of training~\cite{andrychowicz2017hindsight}. In Chapter~\ref{ch:esil} and Chapter~\ref{ch:dtgsh}, we explore two approaches to address goal-oriented RL within a sparse reward setting, based on hindsight experience replay (HER)~\cite{andrychowicz2017hindsight}. Details about the goal-oriented RL and sparse reward function are described in Chapter~\ref{ch:background}.  
+
+\section{Exploration Strategies in DRL}
+The trade-off between \textit{exploration} and \textit{exploitation} is a challenging topic in DRL. In order to achieve sufficient rewards from the environment, an agent needs to exploit previously learned actions that can lead to higher rewards; however, it also needs to explore in the environment to acquire better action selection in the future. Without enough exploration, the agent might be stuck at local-minima or even fail to solve tasks.
+
+The classic exploration strategies adopted in DRL include: $\epsilon$-greedy~\cite{mnih2015human,wang2016dueling}, entropy regularisation term~\cite{mnih2016asynchronous,schulman2017proximal,schulman2015trust}, and noise-based exploration~\cite{lillicrap2015continuous,plappert2018parameter,fortunato2018noisy}. For $\epsilon$-greedy, the agent selects optimal actions with probability of $1-\epsilon$ and selects random actions with probability of $\epsilon$; for entropy regularisation, to encourage the agent to select diverse actions in the environment, an additional entropy term $\mathcal{H}(\pi(a_{t}|s_{t}))$ is used to increase the uncertainty of the policy $\pi$; for noise-based exploration, the noise (e.g., Gaussian noise) is added to the action space or parameter space to improve the exploration. However, these classic exploration strategies are relatively simple and can only provide limited contributions when the complexity of the environment is increased.
+
+In this thesis, we discuss a more efficient exploration strategy called \textit{intrinsic motivation}, which can achieve better performance than previous classic exploration strategies in complex environments. From a cognitive psychological perspective, \textit{extrinsic motivation} denotes a behaviour driven by some specific incentive mechanism, while \textit{intrinsic motivation} refers to a behaviour which is self-driven~\cite{singh2005intrinsically}. More specifically, without the guidance of task-specific reward signals, intrinsic motivation can still keep organisms exploring and emerging broad behaviours or skills based on curiosity. Although such emerged skills may not be able to solve one specific task directly, they can be used as low-level skills to address various high-level tasks and thereby improve the learning efficiency. 
+
+This mechanism of curiosity can also be extended to RL. In RL, the agent typically learns the skills to tackle a specific task through a designed reward function, and this learning process is driven by \textit{extrinsic motivation}, and the corresponding reward function is also called \textit{extrinsic reward}. However, in the task where the extrinsic reward is difficult to acquire (e.g., sparse reward or delayed reward settings), the agent cannot achieve a sufficient supervised signal for learning. In this case, \textit{intrinsic motivation} can encourage the agent to explore novel states in the environment and learn valuable skills to improve learning efficiency and reach the ultimate goal. In Chapter~\ref{ch:daim}, we propose a diversity-based intrinsic motivation to help the agent explore an environment with delayed rewards.
+
+\section{Generalisation and Interpretability}
+Generate a policy that can be generalised to unseen environments is also essential when deploying RL models in real-world applications~\cite{kirk2021survey}. In the DRL community, instead of using a physical robot, a robot simulator is often selected to collect samples during training. The reason is that collecting samples in the simulation environment is faster and cheaper, and it can also avoid unexpected movements of the physical robot during the exploration stage. However, the distribution of the observations in the simulation environment is different from that of the real world. Thus, it is challenging to transfer the policy trained in the simulation environment to the real world.
+
+Interpretability is also another challenge in DRL. Although DRL has achieved impressive performance in many tasks. However, they are often treated as black boxes during inference. When applying DRL models in real-world tasks where security and reliability are important (e.g., autonomous driving and robot manipulation), it is necessary to understand how DRL models make decisions, in order to prevent potential risks during deployment. In Chapter~\ref{ch:drl_interp}, we train agents with and without one of the sim-to-real technologies -- domain randomisation (DR)~\cite{andrychowicz2018learning,james2017transferring,peng2018sim,sadeghi2017cad2rl,tobin2017domain}, and evaluate their robustness to various previously unseen scenarios. Furthermore, different interpretability methods are adopted to analyse and understand how these trained agents work during inference.
+
+%s still restricted to be applied to real-world problems, because RL requires large amount of samples for training, and .
+\section{Contributions and Outline}
+The contributions and outline of this thesis are organized as follows:
+% make a list to summarize the contribution
+\begin{enumerate}
+    \item In \textbf{Chapter}~\ref{ch:background}, we provide an introduction to reinforcement learning, deep neural networks, optimisation methods, and deep reinforcement learning algorithms that are used in the following chapters.
+   
+    \item In \textbf{Chapter}~\ref{ch:esil}, we propose the episodic self-imitation learning (ESIL) algorithm, in order to improve the sample efficiency of RL in continuous control tasks within the sparse reward setting. The proposed method utilises episodic modified trajectories to update the policy. In addition, an auxiliary trajectory selection module and an adaptive weight are leveraged to remove undesired trajectories and balance the contribution between the RL loss term and self-imitation learning loss term. Extensive experiments show that ESIL achieves better performance than other baselines in four robot simulation tasks. 
+    
+    \item In \textbf{Chapter}~\ref{ch:dtgsh}, we propose a diversity-based sampling strategy to improve the learning efficiency of hindsight experience replay (HER)~\cite{andrychowicz2017hindsight}. The diversity-based sampling strategy can be divided into two stages in this work. During training, the trajectories that are more valuable for training will be sampled in the first stage. In the second stage, one transition will be sampled from each of the selected trajectories to form candidate transitions. Then, a minibatch size of transitions with diverse goal states will be selected for the final training by using $k$-DPP. From experiments, our method outperforms other baselines in all benchmark tasks.
+    
+    \item In \textbf{Chapter}~\ref{ch:daim}, we design a diversity-based intrinsic reward to encourage the agent explore novel states in the tasks with sparse or delayed reward settings. The key idea in our work is to use determinantal point processes (DPPs) to model the discrepancy between states as an intrinsic reward. Furthermore, A bi-level optimisation method is utilised to combine with the proposed diversity-based measure, so that the intrinsic reward will increase the extrinsic reward while increasing diversity. From extensive experiments, our method achieves state-of-the-art performance in the MuJoCo locomotion environment within standard and delayed reward settings, and it also improves the learning efficiency at the initial stage of training in the arcade learning environment (ALE). 
+    
+    \item In \textbf{Chapter}~\ref{ch:drl_interp}, we investigate the trained DRL agents with various types of interpretability methods. Large amounts of quantitative and qualitative results are used to analyse the agent trained with and without domain randomisation (DR) to understand the effect of DR.
+    
+    % Discussion and Conclusion
+    \item In \textbf{Chapter}~\ref{ch:conclusions}, we briefly summarise the contributions of this thesis, and introduce future works and potential applications.
+\end{enumerate}
+% \section{Statement of Originality}
+% Statement here.
 \section{Publications}
+This thesis includes the content and figures of the listed publications ($^{*}$ denotes equal contributions).
+\begin{enumerate}
+	\item \underline{\textbf{Tianhong Dai}}, Hengyan Liu, Anil Anthony Bharath, ``Episodic Self-Imitation Learning with Hindsight", Electronics, Special Issue on Deep Reinforcement Learning: Methods and Applications, vol.9, pp.1742, 2020. [\textbf{Chapter}~\ref{ch:esil}]
+	\item \underline{\textbf{Tianhong Dai}}, Hengyan Liu, Kai Arulkumaran, Guangyu Ren, and Anil Anthony Bharath, ``Diversity‐based Trajectory and Goal Selection with Hindsight Experience Replay", Pacific Rim International Conference on Artificial Intelligence, pp.32--45, 2021. [\textbf{Chapter}~\ref{ch:dtgsh}]
+	\item \underline{\textbf{Tianhong Dai}}, Yali Du, Meng Fang, and Anil Anthony Bharath, ``Diversity-Augmented Intrinsic Motivation for Deep Reinforcement Learning", Neurocomputing, vol.468, pp.396--406, 2021. [\textbf{Chapter}~\ref{ch:daim}]
+	\item \underline{\textbf{Tianhong Dai}$^{*}$}, Kai Arulkumaran$^{*}$, Tamara Gerbert, Samyakh Tukra, Feryal Behbahani, and Anil Anthony Bharath, ``Analysing Deep Reinforcement Learning Agents Trained with Domain Randomisation", Neurocomputing, vol.493, pp.143--165, 2022. [\textbf{Chapter}~\ref{ch:drl_interp}]
+	\item \underline{\textbf{Tianhong Dai}}, Magda Dubois, Kai Arulkumaran, Jonathan Campbell, Cher Bass, Benjamin Billot, Fatmatulzehra Uslu, Vincenzo de Paola, Claudia Clopath, and Anil Anthony Bharath, ``Deep Reinforcement Learning for Subpixel Neural Tracking", International Conference on Medical Imaging with Deep Learning, pp.130--150, 2019 (Spotlight). [\textbf{Chapter}~\ref{ch:conclusions}]
+\end{enumerate}
 
-Publications here.
+% List extra publications
+\td{In addition to the above publications, the following publications that I authored/co-authored during my Ph.D. study also contribute to deep reinforcement learning and its related applications.}
+\begin{enumerate}
+	\item Cher Bass, \underline{\textbf{Tianhong Dai}}, Benjamin Billot, Kai Arulkumaran, Antonia Creswell, Claudia Clopath, Vincenzo de Paola, and Anil Anthony Bharath, ``Image Synthesis with a Convolutional Capsule Generative Adversarial Network", International Conference on Medical Imaging with Deep Learning, pp.39--62, 2019 (Oral).
+	\item Shafa Balaram, Kai Arulkumaran, \underline{\textbf{Tianhong Dai}}, and Anil Anthony Bharath, ``A Maximum Entropy Deep Reinforcement Learning Neural Tracker", International Workshop on Machine Learning in Medical Imaging, pp.400--408, 2019.
+	\item Yali Du, Lei Han, Meng Fang, \underline{\textbf{Tianhong Dai}}, Ji Liu, and Dacheng Tao, ``LIIR: Learning Individual Intrinsic Reward in Multi-Agent Reinforcement Learning", Advances in Neural Information Processing Systems, vol.32, pp.4403--4414, 2019.
+\end{enumerate}
