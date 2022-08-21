@@ -1,0 +1,204 @@
+\documentclass[11pt]{article}
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+
+% Set page size and margins
+% Replace `letterpaper' with`a4paper' for UK/EU standard size
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{setspace}
+% Useful packages
+\usepackage{amsmath}
+\usepackage{mathrsfs}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{bm}
+%\usepackage{hyperref}
+ \usepackage{float}
+\usepackage{graphicx}
+\newcommand{\td}[1]{\textcolor{red}{#1}}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\renewcommand{\thefigure}{\Alph{figure}}
+\title{Response Letter For Ph.D. Thesis Revision}
+\author{Candidate: Tianhong Dai (CID: 01085460) \\ External Examiner: Prof. Jonathan Hare \\ Internal Examiner: Prof. Aldo Faisal \\ Supervisor: Prof. Anil Anthony Bharath}
+\date{}
+\begin{document}
+%\doublespacing
+\onehalfspacing
+\maketitle
+
+\noindent I thank the examiners for their constructive feedback. In light of examiners' comments and suggestions, I have revised my thesis manuscript. The modified text in the manuscript is indicated with a \td{red} color. Detailed responses to the comments are listed below.
+
+\section*{General Modification}
+\begin{enumerate}
+\item[1)] \textbf{Modification:} According to the suggestions in the viva examination, I have moved Chapter 6 in the original manuscript to Chapter 3 in the revised manuscript. Furthermore, I have also changed the order in the summarization of each chapter in Chapter 1 and Chapter 7 to keep the consistency. The structure of the revised manuscript is listed as follows and the \textcolor{blue}{blue} numbers in brackets represent the original chapter numbers:
+\begin{itemize}
+    \item Chapter 1 - Introduction
+    \item Chapter 2 - Background Theory
+    \item Chapter 3 (\textcolor{blue}{6}) - Analysing DRL Agents Trained with Domain Randomisation
+    \item Chapter 4 (\textcolor{blue}{3}) - Episodic Self-Imitation Learning with Hindsight
+    \item Chapter 5 (\textcolor{blue}{4}) - Efficient Sampling Strategy with Hindsight
+    \item Chapter 6 (\textcolor{blue}{5}) - Diversity-Augmented Intrinsic Motivation
+    \item Chapter 7 - Conclusion
+\end{itemize}
+
+% \item[2)] \textbf{Comment:} Revise the manuscript according to Dr. Hare's notes.\\ \\
+% \textbf{Response}: I have corrected the typos and texts according to Dr. Hare's notes.
+
+\end{enumerate}
+% new page
+\newpage
+
+\section*{Response to Chapter 1}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} List of Tables and Figures: please define short titles ([ ] in latex) to tidy up the structure and give a neat label to the figure.\\ \\
+\textbf{Response:} I have added short titles for all tables and figures in the latest manuscript. Now the titles in the List of Tables and Figures are much more concise.
+
+\item[2)] \textbf{Comment:} Chapter 6 but also 1.3 set yourself apart from the IAI and XAI debate where interpretability in ML has specific connotations, while here you actually mean analysing the policy. \\ \\
+\textbf{Response:} I have changed the title of Chapter 6 (Chapter 3 in the revised manuscript) to ``Analysing DRL Agents trained with Domain Randomisation". Furthermore, I also have changed the main idea in Section 1.3, which separates my thesis from IAI and XAI.
+
+\end{enumerate}
+
+% start a new page for review 2
+\newpage
+\section*{Response to Chapter 2}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} Figure 2.1 which is the highlighted neuron in relation to Eq 2.1 please make more clear to make it a bit more general or in vector form.\\ \\
+%\textbf{Response:} Some results have been removed from the abstract.
+\textbf{Response:} I have highlighted the neurons in Figure 2.1, and I make Equation 2.1 in a more general form.
+%\\ \\
+\item[2)] \textbf{Comment:} 2.1.2. First sentence grammar wrong (perceptrons $<->$ its). Please fix. 2nd sentence is generally true also for conv nets. The reason why Conv nets are more compact or have fewer parameters has not been explained. Make this explicit why there are fewer parameters. Please revise, why not give orders of scaling.
+Make more precise the fact that the architectures are not necessarily translation-invariant, etc. \\ \\
+\textbf{Response:} In Section 2.1.2, I have fixed the grammar in the first sentence. I have also added an explanation of why CNNs can have fewer parameters and clarified that the architectures of CNNs are not necessarily translation-invariant as follows:
+
+``
+When the MLP is used to classify an image, each node in the hidden layer (the next layer of the input layer) is connected to all pixels of the input image. Thus, there will be a large number of parameters in the MLP when the size of the input image is large. For example, when the size of the input image is $256\times256$, the first hidden layer has $256\times256\times N$ parameters to learn, and $N$ is the number of neurons in this layer. Therefore, it is essential to find an approach to substantially reduce parameters. Convolutional neural networks (CNNs) [29] alleviate this problem by employing the parameter sharing strategy and local connectivity. Instead of connecting each node to all nodes in the previous layer, CNNs use a set of learnable filters with relatively small size (e.g. $9\times9$) to slide across the entire image to produce the features. In this case, the first convolution layer only has $9\times9\times M$ parameters to learn, and $M$ is the number of filters, therefore CNNs greatly reduce the number of parameters. Benefiting from parameter sharing, CNNs might have an implicit strong inductive bias that reflects translation invariance in some desired mapping from physical world to feature space.
+"
+
+\item[3)] \textbf{Comment:} 2.4.1 Clarify the benefit of the target network, why not also highlight its introduction in the nature paper.\\ \\
+\textbf{Response:} In Section 2.4.1, I have added more clarification about the benefit of using the target network according to the original nature paper as follows:
+
+``In DQN, the target network is proposed to stabilise the training. This is because in the standard online Q-learning update, the update that leads to an increase in the current Q-value, $Q(s_{t}, a_{t})$, can also increase the Q-value of the next state and all actions, $Q(s_{t+1}, a)$. Hence, the estimated target Q-value will also increase and may cause divergence or oscillations of the policy. Therefore, using the target network with the old parameters can introduce a delay between the updated Q-value and the estimated target Q-value, and thus prevent policy divergence [5]."
+
+\item[4)] \textbf{Comment:} Uncovered statements on TRPO not sufficiently flexible but either an argument or a situation should be given to back it up. Why is PPO more accessible? Explain.
+\\ \\
+\textbf{Response:} In Section 2.4.3, I have added the argument that leads to the inflexible implementation of TRPO -- conjugate gradient, and also add a citation, which is a lecture note from John Schulman, who is the author of TRPO to support this claim. Furthermore, I also have added the explanation that why PPO is more accessible. This is because PPO only needs to maximise a single objective function and does not require additional algorithms (e.g., conjugate gradient and line search).
+\end{enumerate}
+
+\newpage
+\section*{Response to Chapter 3 \textcolor{blue}{(Original Chapter 6)}}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} Review the title if it actually does what it says on the tin. Chapter 6 is called “Interpretability of Deep RL” How is this intepretability in the sense of IAI? Provide in the introduction chapter and here a motivation for what you actually are doing, what other people mean to do in the space of XAI/*I*AI and your take on it. Framing this chapter is key to make it part of a consistent body of work.
+\\ \\
+\textbf{Response:} I have changed the title of this chapter to ``Analysing DRL Agents Trained with Domain Randomisation" to reduce ambiguity between XAI/IAI.
+
+\item[2)] \textbf{Comment:} Also why not move the Chapter 6 to after Chapter 2 (as the story flows better” you do interpretability of features learned by PPO, then you go further and improve on PPO with different ways of improving it in the “old” chapter 3-5).\\ \\
+\textbf{Response:} I have moved the Chapter 6 (original manuscript) to Chapter 3 (revised manuscript). Then, I also have changed the order in the summarization of each chapter in Chapter 1 and Chapter 7 to keep the consistency. Furthermore, I have modified the first paragraph in Section 3.1 to discuss why using PPO as the DRL algorithm and make the story flow better as follows:
+
+``In this thesis, we first provide a comprehensive analysis on the trained DRL agents, which aims to understand features and policies that the agents learned in the environment. Specifically, proximal policy optimisation (PPO) [17] is selected as the DRL algorithm to train the model, because it is widely used in a variety of scenarios [8, 52, 7], we believe this analysis can provide more insight to the community. In the following chapters, we will further improve the sample efficiency of the PPO algorithm with different ways in the tasks with sparse or delayed rewards."
+
+\item[3)] \textbf{Comment:} 6.1b Here make clear you are ignoring your agents but focus on PPO. maybe say why? e.g., everyone uses PPO and that is why I analysed PPO.\\ \\
+\textbf{Response:} I have added the motivation that we select PPO as our DRL algorithm for the analysis in the first paragraph of Section 3.1 (more details can be found in the above response).
+
+\item[4)] \textbf{Comment:} What does the LSTM actually learn? Briefly summarise the finding. Is it surprising?\\ \\
+\textbf{Response:} I have added the corresponding finding about LSTM layers in Section 3.4.6 as follows:
+
+``One possible explanation is that when DR is not activated during training, the textures and colours of the background in the environment remain unchanged, the agent only needs to learn the policy that keeps moving towards the target object in each frame. Therefore, in this case, the sequence information is not that crucial, and the LSTM layer does not play an important role. When DR is activated during training, the textures and colours of the background in the environment change at every frame. When the textures or colours of the background are similar to the target object, the agent needs to use the sequence information to remember the location of the target object in the previous frames to distinguish the target from irrelevant information and complete the task. Therefore, when DR is activated during training, the LSTM layer needs to capture the location of the target object in previous frames."
+
+\item[5)] \textbf{Comment:} 6.4.2 Make it clear that the numbers in the second paragraph are relative changes and not absolute and relate these to the tables.\\ \\
+\textbf{Response:} I have clarified that the numbers in the second paragraph are relative changes in Section 3.4.2 as follows:
+
+``...which reduces the success rate by 0.48 (the relative changes in its performance in the standard test environment, which is 1.00$\pm$0.00; see Table 3.4)."
+
+``The agent trained with visual inputs and without DR merely drops 0.17 success rate (the relative changes in its performance in the standard test environment, which is 1.00$\pm$0.00; see Table 3.4)."
+
+\item[6)] \textbf{Comment:} Table 6.4 and 6.5 are not well readable, drop accuracy after the decimal point to make the fonts bigger.\\ \\
+\textbf{Response:} I have adjusted the font size and precision of Table 3.4 and Table 3.5  to make them more readable.
+
+\end{enumerate}
+
+
+\newpage
+\section*{Response to Chapter 4 \textcolor{blue}{(Original Chapter 3)}}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} 3.1 Appendix A figure in slides please in thesis and explain there. Work it into the HER, SIL, ESIL explanations.\\ \\
+\textbf{Response:} I have added the illustration in Figure 4.2 and added the corresponding explanation in Section 4.1 as follows:
+
+``We further provide an illustration (Figure 4.2) to distinguish between the different types of buffer used in each algorithm in this chapter. Figure 4.2a shows the structure of an \textit{episodic buffer}, which is used in the proposed ESIL. In the episodic buffer, each entry stores a complete episode (i.e., trajectory) with the same length $T$. In each update iteration, all episodes in this buffer will be used for training. After each update iteration, the stored episodes in this buffer will be removed. The episodic buffer only stores the episodes that are collected by the current policy of the agent. Figure 4.2b shows the structure of a standard \textit{replay buffer}, which is used by SIL and SIL+HER in this chapter. Instead of storing a complete episode in each entry, the replay buffer stores a transition in each entry. In each update iteration, batch-sized transitions are sampled for training. After each update iteration, the buffer will not be cleaned. The replay buffer will remove the oldest transition when it is full and a new transition needs to be stored. Figure 4.2c shows the structure of an \textit{episodic replay buffer}, which is used by DDPG+HER in this chapter. Similar to episodic buffer, the episodic replay buffer stores a complete episode with the same length in each entry. In each update iteration, batch-sized episodes will be uniformly sampled. Then, one transition will be uniformly sampled from each selected episode to form batch-sized transitions for training. After each update iteration, the buffer will not be cleaned. The episodic replay buffer will remove the oldest episode when it is full and a new episode needs to be stored."
+
+\item[2)] \textbf{Comment:} Figure 3.2 please write an expanded explanation in the main text working us through what the figures show (relate it to the other content in the chapter).\\ \\
+\textbf{Response:} I have added an expanded explanation in Section 4.3.2 as follows:
+
+``An original trajectory collected by an agent can be divided into two categories: 1) the agent never reaches the goal and 2) the agent has reached its original goal before. Figure 4.3A shows the case where the agent never reaches the goal. In this case, the original experiences never contain a non-negative reward. However, the hindsight experience will have at least one transition that has a non-negative reward (e.g., the final step). According to the rules for calculating the returns, all hindsight experiences (solid orange trajectory) have higher returns than the original experiences (solid blue trajectory). Therefore, in this case, all hindsight experiences can be selected to benefit the training. Figure 4.3B demonstrates the case that the agent has achieved its original goal in the third timestep and thus received a non-negative reward. However, for the hindsight experience, it only achieves a non-negative reward in the end of the trajectory. Therefore, in the first three steps, the original experiences have higher returns than the hindsight experiences (dashed orange trajectory), which means that the original experiences have better quality than the hindsight experiences, and these hindsight experiences are ignored from the training. For the remainder of the episode of Figure 4.3B, the hindsight experiences (solid orange trajectory) have higher returns than the original ones, and thus these hindsight experiences are selected to accelerate the training."
+
+\item[3)] \textbf{Comment:} Linking $\rightarrow$ In section 2.3.2. Clarify the notion of state and goal in the context of the illustrations and more generally. Is a goal a state?
+\\ \\
+\textbf{Response:} I have added the clarification of the notion of state and goal in Section 2.3.2 as follows:
+
+``To be clarified, the desired goal $g$ should be part of the state in RL. However, in order to highlight the specificity of different goal positions in goal-oriented RL, we split the desired goal out of the state. During training or evaluation, the desired goal and state are still concatenated together as the input of the neural network."
+
+\item[4)] \textbf{Comment:} In section 3.4.1. Empty room paragraph, target position is randomly selected *at* each episode, needs to be clarified. Add citation if you want to say this is standard.
+\\ \\
+\textbf{Response:} I have added the clarification that the target position in Empty Room is randomly selected at the beginning in Section 4.4.1. I also add the related citation to explain this is a standard solution.
+\end{enumerate}
+
+\newpage
+\section*{Response to Chapter 5 \textcolor{blue}{(Original Chapter 4)}}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} Why is this not one chapter with Chapter 3:
+Chapter 3 changes loss function, Chapter 4 changes sampling.\\ \\
+\textbf{Response:} I have discussed the reason that why use two independent chapters to introduce two algorithms that related to hindsight experience replay in Section 5.1.
+
+\item[2)] \textbf{Comment:} 4.2 in preview to 4.3 add small table that lists in each row a sampling strategy (method), paper citation, and description, to structure ”the field”. Perhaps add briefly a shortcoming for each method. Perhaps use this table to “derive” why your method was the logical conclusion to overcome the shortcomings of those methods.\\ \\
+\textbf{Response:} I have added Table 5.1 in Section 5.2 to list the sampling strategies for each method and discussed the limitations of these methods and how our approach can overcome these shortcomings.
+
+\item[3)] \textbf{Comment:} Figure 4.5 and 4.6 and content - why not training models longer, e.g. 4.5.d seems not to have converged. If you think about these figures as evidence of your methods being better, you need to qualify that (4.5.a is clearly better, 4.5.c not so clear). This needs to be discussed in the discussion in terms of the computational limitations of chapter 4, and in results clearly stated that for some cases this is inclusive as you did not have enough computer time. Make clear that you ran these models for months, so it does not appear you were lazy.\\ \\
+\textbf{Response:} I have added the discussion about the limitations of the experiments, which are caused by the lack of sufficient computing resources in Section 5.5 as follows:
+
+``There are still several limitations in some of the experiments, where the models do not have enough training time to converge in Figure 4.5c and Figure 4.5d. There are two main reasons for this, on the one hand we use the same experimental setup as CHER [69] for fair comparison and on the other hand we do not have enough computing resources to complete training with more epochs. In this chapter, it took us more than one month to finish these experiments. In the future, once we have enough computing resources, we will re-evaluate the method for longer training epochs."
+
+\item[4)] \textbf{Comment:} 4.4.5 This subsubsection is just 2 sentences long this is not appropriate, it should be completed with reasoning of what the results in the table mean and where your method stands.\\ \\
+\textbf{Response:} Followed by the comment 5 in this chapter, I have moved and added more discussion about the time complexity of baseline methods and DTGSH in Section 5.5 as follows:
+
+``Furthermore, Table 5.3 gives example training times of all of the HER-based algorithms. From the table, HER requires the minimum time, because it only uses the naive uniform sampling strategy for both trajectory and transition. HEBP needs a bit more training time than HER, because it requires additional computation for the energy of each trajectory. CHER displays the longest training time, because it requires an inefficient greedy algorithm [69] for the sampling according to the proximity and diversity of candidate goals. DTGSH is more efficient than CHER, but slower than the other two methods. It needs an additional calculation of the diversity score of $\mathcal{O}(N_{p}b^3)$ at the end of every training episode, and sampling of $\mathcal{O}(mk^2)$ for each minibatch. Although DTGSH has better sample efficiency than other baselines, it needs a longer training period. In the future, we will improve the method towards achieving the balance between performance and time complexity."
+
+\item[5)] \textbf{Comment:} 4.5 needs more of a discussion (1 paragraph is a bit short and short on references to the field). You need to relate to the table mentioned above (this could be even moved here) you should relate to other methods. You should also discuss the limitations of your computer simulation results.\\ \\
+\textbf{Response:} In Section 5.5, I have expanded more discussions, moved related discussion about time complexity here, and discussed the limitations and future work about DTGSH.
+\end{enumerate}
+
+
+
+\newpage
+\section*{Response to Chapter 6 \textcolor{blue}{(Original Chapter 5)}}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} Chapter 3 what is the strategic difference to chapter 5?
+Chapter 3 increases the chance of seeing a (sparse) reward and Chapter 5 adds an endogenously defined reward term to help with the reward sparsity problem. This logic should be framed and phrased at the start of chapter 5 to make clear what changes. This difference should be also highlighted in 7.1 when relating to the chapter\\ \\
+\textbf{Response:} I have added the changes between previous chapters and the current chapter at the beginning of Section 6.1. I have also highlighted the difference between different proposed methods in the summary of thesis achievements in Section 7.1.
+
+\item[2)] \textbf{Comment:} If so, why not combine both methods - if you were planning to do it, suggest it as an extension of your work in the discussion of chapter 5 (sec 5.5) and also thus in 7.2\\ \\
+\textbf{Response:} I have added the combination between ESIL and intrinsic motivation as the future work in both Section 6.5 and Section 7.2.1.
+
+\item[3)] \textbf{Comment:} 5.4 (p.103) extend the end of the top paragraph to give the good explanation. in fact you drew a nice graphic in the viva, you can use it to illustrate your point.\\ \\
+\textbf{Response:} I have added more explanation in Section 6.4 ({p.128}) with an illustration (see Figure 6.7) as follows:
+
+``For example, in Figure 6.7, the agent selects an action in $s_{t}$, which causes it to fall into a trap in $s_{t+1}$. When the raw observation feature is used as the feature embedding method, the selected action leads to high diversity between the adjacent states, however the agent fails in this episode. Therefore, simply increasing diversity may not lead to better performance and it is necessary to learn the features that can better quantify the diversity between adjacent states to improve the task-specific performance (i.e., extrinsic returns) of the agent."
+
+\item[4)] \textbf{Comment:} 5.5 you state that complexities are similar but you have not discussed these, a table and explanatory words in the main text would help here a lot. Also link the logic of the paragraphs together, it is not good style to have one sentence paragraphs.\\ \\
+\textbf{Response:} In Section 6.5, I have added the training time of DAIM and other baselines in Table 6.4 to support the state that DAIM has similar complexity to other baseline methods. Furthermore, I have linked the paragraphs together in this section to improve the style.
+\end{enumerate}
+
+\newpage
+\section*{Response to Chapter 7}
+\begin{enumerate}
+\item[1)] \textbf{Comment:} 7.1 summarise first how your achievements relate to your thesis title - a few sentences suffices.\\ \\
+\textbf{Response:} I have re-organised the first paragraph of Section 7.1 to demonstrate how my achievements relate to my thesis title as follows:
+
+``In this thesis, in order to improve the sample efficiency of deep reinforcement learning (DRL) in the environments with sparse or delayed rewards, three novel DRL methods are proposed. In these methods, we propose 1) a novel self-imitation learning loss term that allows the agent to overcome hard exploration problems by using hindsight experiences, 2) a novel sampling strategy that increases the chance to sample valuable transitions for the training and 3) a diversity-based intrinsic reward that can provide auxiliary dense feedback to the agent for helping the exploration in the environments with delayed or sparse rewards. From extensive experiments, these methods achieve better performance than other baseline approaches when using the same number of samples for training, which demonstrates that our methods indeed improve the sample efficiency of DRL algorithms. Moreover, we provide a comprehensive quantitative and qualitative analysis on the agents trained with and without domain randomisation (DR) to visualise and explain why DR can improve the robustness of the agents against unseen scenarios."
+
+\item[2)] \textbf{Comment:} Chapter 7.2 you tie it up by saying you would like to tie the interpretability with your new methods together and compare to PPO, as perhaps the features have changed.\\ \\
+\textbf{Response:} I have added this work in Section 7.2.1 as the future work of Chapter 3 as follows:
+
+``Another future work is to apply the related interpretability methods to our proposed methods in other chapters and then compare the results with the PPO algorithm, because the learned feature may have changed and thus some interesting findings may be obtained to explain why these methods can improve the performance of vanilla PPO algorithm."
+\end{enumerate}
+
+\end{document}

@@ -9,38 +9,43 @@
 \chapter{Diversity-Augmented Intrinsic Motivation}
 \label{ch:daim}
 \section{Introduction}
-The previous chapter uses the determinantal point processes (DPPs) framework to measure the diversity of achieved goals in a trajectory and proposes a sampling strategy that uses diversity as a priority to sample the trajectories for further processing, in which diversity can also quantify the contribution of each trajectory. In this chapter, we keep exploring the potential application of determinantal point processes (DPPs) in deep reinforcement learning (DRL).
+In order to improve sample efficiency of DRL algorithms in the environments offering sparse rewards, Chapter~\ref{ch:esil} proposes a novel self-imitation loss function to increase the frequency that the agent achieves positive samples, and Chapter~\ref{ch:dtgsh} uses the determinantal point processes (DPPs) framework to measure the diversity of achieved goals in a trajectory and proposes a sampling strategy that uses diversity as a priority to sample the trajectories for further processing, in which diversity can also quantify the contribution of each trajectory. In this chapter, we keep exploring the potential application of determinantal point processes (DPPs) in deep reinforcement learning (DRL). In contrast to previous chapters, DPPs are used to quantify the discrepancy between adjacent states as additional endogenous rewards to accelerate the training of DRL agents in the environment with the sparse reward setting.
 
 %Deep reinforcement learning (RL) allows agents to learn a wide range of reward-driven skills, including playing games~\cite{mnih2015human,silver2016mastering,xu2020neurips}, controlling robots~\cite{dai2020episodic,fang2018dher,gu2017deep,levine2016end}, and making decisions in other environments~\cite{fang2017learning,vinyals2017starcraft}. 
-Many important applied problems in DRL can be accurately modelled as learning from extrinsic rewards, where a function (approximately) relates features associated with a state/action pair and the expectation of the resulting rewards. Furthermore, with appropriate features, it is often the case that linear or nonlinear functions can accurately approximate the reward function. However, ill-designed reward functions usually lead to unexpected behaviors~\cite{riedmiller2018learning} and limited exploration. 
-Potential-based reward shaping methods~\cite{ng1999policy} offers a general answer to what degree of reward function modifications do not affect the optimal policy. Other works have tried to design auxiliary rewards to derive policies with desired properties. For example, Jaderberg \textit{et al.}~\cite{jaderberg2016reinforcement} calculate a pseudo-reward from unsupervised auxiliary tasks, and use this reward to refine its internal representation. In count-based methods~\cite{bellemare2016unifying, ostrovski2017count, tang2017exploration}, a pseudo-count based reward is used to encourage the agent to explore novel states in the environment.
 
-In environments or tasks for which the reward sparsity is higher, undirected, or even deceptive, the application of RL techniques is significantly more difficult, since the agent might have only occasional opportunities to improve its policy, such as when the final goal is reached. In such scenarios, agents can be endowed with mechanisms of {\it intrinsic motivation} that encourage exploration in environments and learn useful policies even without explicit supervision. Early attempts to incorporate intrinsic motivation use self-supervised prediction errors as intrinsic rewards to help the agent explore~\cite{pathak2017curiosity}. More recently, Zheng \textit{et al.}~\cite{zheng2018learning} design an augmented agent with additive intrinsic rewards. When the intrinsic value of the action is added to the task-dependent (hereafter extrinsic) rewards, the performance of policy gradient based learning methods can be improved. Another line of work uses auxiliary control tasks, such as pixel control or feature control, which can significantly speed up learning of the main task. The rationale is that learning the auxiliary tasks gives the agent features that are useful for manipulating the environment. However, these intrinsic methods are either difficult to explain or only specific to some tasks.
+%Many significant application problems in DRL can be formulated as a 
+% Many important applied problems in DRL can be accurately modelled as learning from extrinsic rewards, where a function (approximately) relates features associated with a state/action pair and the expectation of the resulting rewards. Furthermore, with appropriate features, it is often the case that linear or nonlinear functions can accurately approximate the reward function. However, hand-crafted reward functions usually lead to unexpected behaviors~\cite{riedmiller2018learning} and limited exploration. 
+% Potential-based reward shaping methods~\cite{ng1999policy} offers a general answer to what degree of reward function modifications do not affect the optimal policy. Other works have tried to design auxiliary rewards to derive policies with desired properties. For example, Jaderberg \textit{et al.}~\cite{jaderberg2016reinforcement} calculate a pseudo-reward from unsupervised auxiliary tasks, and use this reward to refine its internal representation. In count-based methods~\cite{bellemare2016unifying, ostrovski2017count, tang2017exploration}, a pseudo-count based reward is used to encourage the agent to explore novel states in the environment.
 
-Encouraging effective exploration of novel states for agents without any reward signal is still a challenging problem.
-Making progress on this problem requires specifying a learning objective that ensures the agent explores large parts of the state space. In this chapter, we show how a simple objective based on a diversity measure can enable RL agents to autonomously explore states. This module is useful for a number of environments, as confirmed by a selection of MuJoCo locomotion tasks and video games.
+% In environments or tasks for which the reward sparsity is higher, undirected, or even deceptive, the application of RL techniques is significantly more difficult, since the agent might have only occasional opportunities to improve its policy, such as when the final goal is reached. In such scenarios, agents can be endowed with mechanisms of {\it intrinsic motivation} that encourage exploration in environments and learn useful policies even without explicit supervision. Early attempts to incorporate intrinsic motivation use self-supervised prediction errors as intrinsic rewards to help the agent explore~\cite{pathak2017curiosity}. More recently, Zheng \textit{et al.}~\cite{zheng2018learning} design an augmented agent with additive intrinsic rewards. When the intrinsic value of the action is added to the task-dependent (i.e., extrinsic) rewards, the performance of policy gradient based learning methods can be improved. 
+%Another line of work uses auxiliary control tasks, such as pixel control or feature control, which can significantly speed up learning of the main task. The rationale is that learning the auxiliary tasks gives the agent features that are useful for manipulating the environment. However, these intrinsic methods are either difficult to explain or only specific to some tasks.
 
-We hypothesise that in order to acquire an agent that is useful and efficient, we must train the agent so that it can attain coverage over the set of possible states. However, the common exploration strategies ({e.g.}, random sampling, $\epsilon$-greedy) can re-visit previously explored states of the agent, limiting the effectiveness of state-space coverage.
+Encouraging the agent to explore previously unseen/novel states in the environments with sparse or delayed reward settings is still a challenge in DRL. In this chapter, we demonstrate how a simple generated intrinsic reward function based on a diversity measure can enable RL agents to explore novel states efficiently. This generated auxiliary reward is functional for a number of environments, as confirmed by a selection of MuJoCo locomotion tasks and video games.
 
-A key idea in our work is to use a measure of discrepancy between states as an intrinsic motivation. \td{Further, states that are distinguishable are not necessarily diverse in a semantically meaningful way. To combat this problem, we want the intrinsic motivation of the agent that is not only distinguishable but also is as diverse as possible.}
+% Encouraging effective exploration of novel states for agents without any reward signal is still a challenging problem. Making progress on this problem requires specifying a learning objective that ensures the agent explores large parts of the state space. In this chapter, we demonstrate how a simple generated intrinsic reward function based on a diversity measure can enable RL agents to explore novel states efficiently. This auxiliary reward is functional for a number of environments, as confirmed by a selection of MuJoCo locomotion tasks and video games.
 
-To model the diversity of the agent's states, we adopt the framework of determinantal point processes (DPPs)~\cite{kulesza2012determinantal} to formulate the intrinsic reward as a dynamic measure of diversity. Regarding the sequence of states as a DPP allows a measure of the diversity of subset selection, widely used in data summarization for selecting a diversified subset \cite{gong2014diverse}. We build an intrinsic reward for diversity with parameterised DPPs and propose a new general method for learning policies with intrinsic rewards. The proposed method is referred to as diversity-augmented intrinsic motivation ($\ourmethod$). Through a series of experiments, we show that the agents trained with the proposed diversity-based intrinsic rewards learn effectively and attain higher rewards than well-known baselines, especially in continuous control environments.
+%We hypothesise that in order to acquire an agent that is useful and efficient, we must train the agent so that it can attain coverage over the set of possible states.
+
+In order to obtain an agent that can solve the tasks with sparse or delayed rewards, we need the agent to explore as many novel states as possible during training. However, common exploration strategies ({e.g.}, random sampling, $\epsilon$-greedy) can re-visit previously explored states in the environment, which can limit the effectiveness of state-space coverage.
+
+A key idea in our work is to use a measure of discrepancy between states as an intrinsic motivation. To model the diversity of the agent's states, we adopt the framework of determinantal point processes (DPPs)~\cite{kulesza2012determinantal} to formulate the intrinsic reward as a dynamic measure of diversity. Regarding the sequence of states as a DPP allows a measure of the diversity of subset selection, widely used in data summarization for selecting a diversified subset~\cite{gong2014diverse}. We build an intrinsic reward for diversity with parameterised DPPs and propose a new general method for learning policies with intrinsic rewards. The proposed method is referred to as diversity-augmented intrinsic motivation ($\ourmethod$). Through a series of experiments, we show that the agents trained with the proposed diversity-based intrinsic rewards learn effectively and attain higher rewards than well-known baselines, especially in continuous control environments.
 
 The contributions of this chapter can be summarized as follows: 1) The DPPs framework is proposed as a measure for the diversity of adjacent states, and this diversity is used as the intrinsic reward, 2) A bi-level optimisation~\cite{zheng2018learning} is borrowed to combine with the proposed diversity-based measure, so that the intrinsic reward will increase the extrinsic reward while increasing diversity, and 3) $\ourmethod$ is evaluated in the MuJoCo locomotion and arcade learning environments. Empirical results demonstrate that $\ourmethod$ can outperform baseline methods in most of the standard tasks and outperform baselines in 12 out of 15 tasks with delayed rewards in the MuJoCo locomotion environment. In addition, $\ourmethod$ also improves the rate of learning in the initial stage of training in the arcade learning environment.
+\newpage
 
 \section{Related Work}
-Intrinsic motivation is an approach to explore novel states which may lead to higher rewards in the future. Pathak \textit{et al.}~\cite{pathak2017curiosity} propose an intrinsic curiosity module (ICM), suggesting the prediction error between an actual encoded frame and the predicted encoded frame as the intrinsic reward. \td{A higher prediction error indicates the agent has moved into a novel state, and this intrinsic reward will encourage the agent to keep exploring such novel states.} In order to find an appropriate representation of pixels that could be invariant to insignificant changes in the environment, an inverse dynamic model is introduced to extract features. This requires training a network, which uses consecutive frames as input to predict the action that would transition the previous frame to the subsequent. The insight of the inverse dynamic model is that through predicting environment dynamics, features are learned to preserve the key information that predicts the action. Burda \textit{et al.}~\cite{burda2018largescale} conduct a large-scale study of curiosity-driven learning. Their findings suggest that an agent can learn to play a significant number of Atari games, even without receiving any extrinsic rewards from the environment. 
+Intrinsic motivation is an approach to explore novel states which may lead to higher rewards in the future. Pathak \textit{et al.}~\cite{pathak2017curiosity} propose an intrinsic curiosity module (ICM), suggesting the prediction error between an actual encoded frame and the predicted encoded frame as the intrinsic reward. A higher prediction error indicates the agent has moved into a novel state, and this intrinsic reward will encourage the agent to keep exploring such novel states. In order to find an appropriate representation of pixels that could be invariant to insignificant changes in the environment, an inverse dynamic model is introduced to extract features. This requires training a network, which uses consecutive frames as input to predict the action that would transition the previous frame to the subsequent. The insight of the inverse dynamic model is that through predicting environment dynamics, features are learned to preserve the key information that predicts the action. Burda \textit{et al.}~\cite{burda2018largescale} conduct a large-scale study of curiosity-driven learning. Their findings suggest that an agent can learn to play a significant number of Atari games, even without receiving any extrinsic rewards from the environment. 
 
 However, environments with stochastic dynamics may not be suitable for the application of purely exploratory approaches. Variational Information Maximising Exploration (VIME)~\cite{NIPS2016_abd81528} formulates the intrinsic reward based on the information gain according to the agent’s belief of environment dynamics, and it shows significant improvements in the continuous control tasks with the sparse reward setting. 
 
-Zheng \textit{et al.}~\cite{zheng2018learning} introduce learning intrinsic reward for policy gradient (LIRPG), which enables a learnable intrinsic reward function to be used for training an RL agent. \td{In addition, LIRPG adopts a bi-level optimisation scheme that when the policy network is updated to maximise the accumulated intrinsic and extrinsic rewards, the intrinsic reward function is also updated to maximise the accumulated extrinsic rewards achieved by the policy network. This optimisation scheme guarantees the learned reward function can generate meaningful intrinsic rewards to facilitate the agent to reach the ultimate goal (i.e., maximising the accumulated extrinsic rewards). In this work, we also leverage this bi-level optimisation to ensure the agent can explore novel states that deliver more accumulated extrinsic rewards.}
+Zheng \textit{et al.}~\cite{zheng2018learning} introduce learning intrinsic reward for policy gradient (LIRPG), which enables a learnable intrinsic reward function to be used for training an RL agent. In addition, LIRPG adopts a bi-level optimisation scheme that when the policy network is updated to maximise the accumulated intrinsic and extrinsic rewards, the intrinsic reward function is also updated to maximise the accumulated extrinsic rewards achieved by the policy network. This optimisation scheme guarantees the learned reward function can generate meaningful intrinsic rewards to facilitate the agent reaching the ultimate goal (i.e., maximising the accumulated extrinsic rewards). In this work, we also leverage this bi-level optimisation to ensure the agent can explore novel states that deliver more accumulated extrinsic rewards.
 
 \section{Methodology}
 % start
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/chapter5/illustration.pdf}
-    \caption{Illustration of $\ourmethod$. It shows the intrinsic rewards of an entire episode of SuperMarioBros. The red points annotate the key frames in the game. In frames \{17, 26, 32, 41\}, the agent keeps moving forward, and the intrinsic rewards are \td{relatively higher}. In the frames \{303, 327, 354, 379\}, the agent is stuck at the bottom of the flagpole. For these latter four frames, the diversity between adjacent states is very small, and the intrinsic rewards are close to zero.}
+    \caption[Illustration of $\ourmethod$.]{Illustration of $\ourmethod$. It shows the intrinsic rewards of an entire episode of SuperMarioBros. The red points annotate the key frames in the game. In frames \{17, 26, 32, 41\}, the agent keeps moving forward, and the intrinsic rewards are relatively higher. In the frames \{303, 327, 354, 379\}, the agent is stuck at the bottom of the flagpole. For these latter four frames, the diversity between adjacent states is very small, and the intrinsic rewards are close to zero.}
     \label{fig:illustration}
 \end{figure}
 
@@ -60,8 +65,8 @@ To make sure that $\ourmethod$ still increases the extrinsic reward, we adopt a 
   \text{subject to}\quad & \theta^{\prime} =\mathop{\arg\max}_{\theta}\ J^{\text{mix}}(\theta, \eta).
   \nonumber
 \end{align}
-\td{Here $J^{\text{mix}} = \mathbb{E}_{\pi_{\theta}}\bigr[G^{\text{mix}}(s_t,a_t) \bigr]$, and $\theta$ is the parameters of the policy network.
-The optimisation problem of \eqref{eq:obj} can be viewed as a bi-level optimisation, which is widely used in the fields of machine learning, such as meta-learning~\cite{andrychowicz2016learning,nichol2018first,santoro2016meta,xu2018meta,zheng2018learning}, signal processing~\cite{kunapuli2008classification,flamary2014learning}, and hyperparameters optimisation~\cite{franceschi2018bilevel, shaban2019truncated}. In Equation~\eqref{eq:obj}, $J^{\text{ex}}$ and $J^{\text{mix}}$ are upper-level and inner-level objective functions, respectively. The primary goal of this bi-level objective function is to maximise extrinsic returns (upper-level objective function) $J^{\text{ex}}$ with respect to the parameters of intrinsic reward $\eta$, and the updated parameters of the policy network $\theta^{\prime}$ can be achieved via maximising the inner-level objective function.}
+Here $J^{\text{mix}} = \mathbb{E}_{\pi_{\theta}}\bigr[G^{\text{mix}}(s_t,a_t) \bigr]$, and $\theta$ represents the parameters of the policy network.
+The optimisation problem of \eqref{eq:obj} can be viewed as a bi-level optimisation, which is widely used in the fields of machine learning, such as meta-learning~\cite{andrychowicz2016learning,nichol2018first,santoro2016meta,xu2018meta,zheng2018learning}, signal processing~\cite{kunapuli2008classification,flamary2014learning}, and hyperparameters optimisation~\cite{franceschi2018bilevel, shaban2019truncated}. In Equation~\eqref{eq:obj}, $J^{\text{ex}}$ and $J^{\text{mix}}$ are upper-level and lower-level objective functions, respectively. The primary goal of this bi-level objective function is to maximise extrinsic returns (upper-level objective function) $J^{\text{ex}}$ with respect to the parameters of intrinsic reward $\eta$, and the updated parameters of the policy network $\theta^{\prime}$ can be achieved via maximising the lower-level objective function.
 
 % The upper-level optimisation is treated as the leader, while the lower-level optimisation is the follower. The upper agent reshapes the reward to make the low-level agent's learning easier. The low-level agent observes the commands of the upper-level agent and works towards meeting the commands.
 
@@ -95,7 +100,7 @@ Here, instead of collecting another set of samples, importance sampling is emplo
 \end{equation}
 % The principle of the \eq \eqref{eq:chain_rule} is to formulate the effect of the change of $\eta$ on influencing $J^{\text{ex}}$ through its influence on the updated policy parameter $\theta'$.
 %This is a commonly adopted technique in meta-gradient learning~\cite{andrychowicz2016learning,nichol2018first,santoro2016meta,xu2018meta,zheng2018learning}. 
-Through \td{this bi-level optimisation}, the features that are learned ensure that the resulting diversity also increases the extrinsic returns. \td{Furthermore, the value network is updated via a mean squared error loss $\mathcal{L}_{value} = \mathbb{E}[(V(s_{t};\psi) - G_{t}^{\text{mix}})^2]$.} Algorithm~\ref{algo:vi} gives the pseudo code for our method -- diversity-augmented intrinsic motivation ($\ourmethod$). The code is publicly available at: \href{https://github.com/TianhongDai/daim-rl}{https://github.com/TianhongDai/daim-rl}.
+Through this bi-level optimisation, the features that are learned ensure that the resulting diversity also increases the extrinsic returns. Furthermore, the value network is updated via a mean squared error loss $\mathcal{L}_{value} = \mathbb{E}[(V(s_{t};\psi) - G_{t}^{\text{mix}})^2]$. Algorithm~\ref{algo:vi} gives the pseudo code for our method -- diversity-augmented intrinsic motivation ($\ourmethod$). The code is publicly available at: \url{https://github.com/TianhongDai/daim-rl}.
 
 \begin{algorithm}[t]
 	\caption{\label{alg:all} Diversity-Augmented Intrinsic Motivation.
@@ -115,15 +120,14 @@ Through \td{this bi-level optimisation}, the features that are learned ensure th
 		\STATE Compute the diversity-augmented return $G^{\text{mix}}(s, a)$ using the mixed reward: $r^{\text{mix}}=\lambda^{\text{ex}}r^{\text{ex}} + \lambda^{\text{in}}r^{\text{in}}$
 		\STATE Compute the extrinsic return $G^{\text{ex}}(s, a)$ using the extrinsic reward: $r^{\text{ex}}$
 		\STATE Update $\theta$ according to Eq.\eqref{eq:mix_cost} with learning rate $\alpha$
-		\STATE\td{Update $\psi$ according to $\mathcal{L}_{value}=\mathbb{E}[(V(s_{t};\psi)-G^{\text{mix}}_{t})^2]$ with learning rate $\alpha$}
+		\STATE Update $\psi$ according to $\mathcal{L}_{value}=\mathbb{E}[(V(s_{t};\psi)-G^{\text{mix}}_{t})^2]$ with learning rate $\alpha$
 		\STATE Update $\eta$ according to Eq.\eqref{eq:chain_rule} and Eq.\eqref{eq:importance_sampling} with learning rate $\beta$
         \ENDFOR
 	\end{algorithmic}
 	\label{algo:vi}
 \end{algorithm}
-
 \subsection{Parameterised Diversity as Intrinsic Reward}
-We are now ready to parameterise the intrinsic reward with parameter $\eta$ in this section. The intrinsic reward at timestep $t$ is defined as:
+We are now able to parameterise the intrinsic reward with parameter $\eta$ in this section. The intrinsic reward at timestep $t$ is defined as:
 \begin{equation}
     r^{\text{in}}(s_t, s_{t+1}; \eta) = \det\left(\mathbf{L}_{{y}=\{s_{t},s_{t+1}\}}\right),
 \label{eq:intrinsic}
@@ -140,10 +144,17 @@ $r_{t}^{\text{in}}$ measures the diversity of the adjacent state sequence ${y}=\
 \end{equation}
 where $\odot$ is the element-wise multiplication and $\diag(\cdot)$ outputs the diagonal elements of $\mathbf{L}_{y}$ as a vector. 
 
-Figure~\ref{fig:illustration} illustrates the proposed intrinsic reward. When the agent is moving ahead, the intrinsic rewards are \td{relatively higher}. In contrast, when the agent is stuck at the bottom of the flagpole, the intrinsic rewards are close to zero.
+Figure~\ref{fig:illustration} illustrates the proposed intrinsic reward. When the agent is moving ahead (e.g., timesteps $\in$[10, 200]), the intrinsic rewards are higher than when the agent is stuck. In contrast, when the agent is stuck at the bottom of the flagpole, the intrinsic rewards are close to zero (e.g., timesteps $\in$[250, 380]). Figure~\ref{fig:structure_overview} shows the overview of three networks used in DAIM.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\linewidth]{figures/chapter5/daim-struct.pdf}
+    \caption[Overview of three networks in DAIM.]{Overview of three networks in DAIM: intrinsic reward module, policy network, and value network.}
+    \label{fig:structure_overview}
+\end{figure}
 
 \section{Experiments}
-In this section, we evaluate $\ourmethod$ with different selections of baseline policy gradient architecture, namely, proximal policy optimisation (PPO) and advantage actor critic (A2C). We choose MuJoCo locomotion and the arcade learning environments (Atari games and SuperMarioBro) as the benchmark environments (see Figure~\ref{fig:ch5_envs}). 
+In this section, we evaluate $\ourmethod$ with different selections of baseline policy gradient architecture, namely, proximal policy optimisation (PPO) and advantage actor critic (A2C). We choose MuJoCo locomotion and the arcade learning environments (Atari games and SuperMarioBro) as the benchmark environments (see Figure~\ref{fig:ch5_envs}).
 \begin{figure}[h]
     \begin{subfigure}{\textwidth}
         \centering
@@ -157,7 +168,7 @@ In this section, we evaluate $\ourmethod$ with different selections of baseline 
         \caption{Arcade Learning Environment.}
         \label{fig:ale_env}
     \end{subfigure}
-    \caption{Visualisation of (a) MuJoCo Locomotion Environment: HalfCheetah, Hopper, Walker2d, Ant, and Humanoid, and (b) Arcade Learning Environment: Alien, BeamRider, Breakout, MsPacman, UpNDown, and SuperMarioBros.}
+    \caption[Evaluation environments of DAIM.]{Visualisation of (a) MuJoCo Locomotion Environment: HalfCheetah, Hopper, Walker2d, Ant, and Humanoid, and (b) Arcade Learning Environment: Alien, BeamRider, Breakout, MsPacman, UpNDown, and SuperMarioBros.}
     \label{fig:ch5_envs}
 \end{figure}
 
@@ -182,7 +193,7 @@ This also demonstrates that the bi-level update has led to meaningful intrinsic 
 \begin{figure}[t!]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/chapter5/mujoco_result_54_seaborn.pdf}
-    \caption{Comparison between $\ourmethod$ and baseline approaches (PPO, LIRPG, and VIME) in the MuJoCo locomotion environment with standard and delayed reward settings. The $x$-axis represents the number of timesteps in training. The $y$-axis represents the average extrinsic rewards over the last 100 training episodes. All of the experiments were run using 5 different seeds. The solid lines and shaded areas in the plots represent the mean and the standard errors over the performances of the different seeds.}
+    \caption[Results of DAIM in the MuJoCo environment with standard and delayed reward settings.]{Comparison between $\ourmethod$ and baseline approaches (PPO, LIRPG, and VIME) in the MuJoCo locomotion environment with standard and delayed reward settings. The $x$-axis represents the number of timesteps in training. The $y$-axis represents the average extrinsic rewards over the last 100 training episodes. All of the experiments were run using 5 different seeds. The solid lines and shaded areas in the plots represent the mean and the standard errors over the performances of the different seeds.}
     \label{fig:mujoco_results}
 \end{figure}
 
@@ -205,7 +216,7 @@ This also demonstrates that the bi-level update has led to meaningful intrinsic 
     \bottomrule
     \end{tabular}
     }
-    \caption{Quantitative results comparison between DAIM and other baseline methods (PPO, LIRPG, and VIME) in the MuJoCo locomotion environment with the standard reward setting. In the table, it shows final average extrinsic rewards $\pm$ standard error across 5 different seeds of last 100 episodes in the training. The best and the second best results are (\textbf{bold}) and (\underline{underline}), respectively.}
+    \caption[Average reward of DAIM in the MuJoCo environments with the standard reward setting in the final epoch during training.]{Quantitative results comparison between DAIM and other baseline methods (PPO, LIRPG, and VIME) in the MuJoCo locomotion environment with the standard reward setting. In the table, it shows final average extrinsic rewards $\pm$ standard error across 5 different seeds of last 100 episodes in the training. The best and the second best results are (\textbf{bold}) and (\underline{underline}), respectively.}
     \label{tab:standard}
 \end{table}
 
@@ -253,7 +264,7 @@ This also demonstrates that the bi-level update has led to meaningful intrinsic 
     DAIM ($\lambda^{ex}=0.01$) & \underline{1597$\pm$410} & 1052$\pm$337 & \underline{1768$\pm$518}& -117$\pm$19 & \underline{488$\pm$7}\\
     \bottomrule
     \end{tabular}}
-    \caption{Quantitative results comparison between DAIM and other baseline methods (PPO, LIRPG, and VIME) in the MuJoCo locomotion environment with the delayed reward setting. In the table, it shows final average extrinsic rewards $\pm$ standard error across 5 different seeds of last 100 episodes in the training. The best and the second best results are (\textbf{bold}) and (\underline{underline}), respectively.}
+    \caption[Average reward of DAIM in the MuJoCo environments with the delayed reward settings in the final epoch during training.]{Quantitative results comparison between DAIM and other baseline methods (PPO, LIRPG, and VIME) in the MuJoCo locomotion environment with the delayed reward setting. In the table, it shows final average extrinsic rewards $\pm$ standard error across 5 different seeds of last 100 episodes in the training. The best and the second best results are (\textbf{bold}) and (\underline{underline}), respectively.}
     \label{tab:delay}
 \end{table}
 
@@ -282,7 +293,7 @@ This also demonstrates that the bi-level update has led to meaningful intrinsic 
     \includegraphics[width=\textwidth]{figures/chapter5/embedding/delay40.pdf}
     \caption{Delay=40}
   \end{subfigure}\hfill
-  \caption{The performance of different feature embedding methods in the Walker2d task with standard and delayed reward settings. DAIM achieves higher accumulated extrinsic rewards.} 
+  \caption[Results of different feature embedding methods in the Walker2d task with standard and delayed reward settings.]{The performance of different feature embedding methods in the Walker2d task with standard and delayed reward settings. DAIM achieves higher accumulated extrinsic rewards.} 
   \label{fig:walker2d_results}
 \end{figure}
 % \begin{figure}[t!]
@@ -313,7 +324,7 @@ This also demonstrates that the bi-level update has led to meaningful intrinsic 
     \includegraphics[width=\textwidth]{figures/chapter5/r_in_only/humanoid.pdf}
     \caption{Humanoid}
   \end{subfigure}\hfill
-  \caption{Using {\em only} intrinsic rewards ($\lambda^{\text{ex}}=0$), we evaluate the performance (accumulated {\it extrinsic} rewards on vertical axes) of different feature embedding methods in all five MuJoCo tasks with the standard reward setting.} 
+  \caption[Results of using intrinsic reward only with different feature embedding methods in the MuJoCo environment with the standard reward setting.]{Using {\em only} intrinsic rewards ($\lambda^{\text{ex}}=0$), we evaluate the performance (accumulated {\it extrinsic} rewards on vertical axes) of different feature embedding methods in all five MuJoCo tasks with the standard reward setting.} 
   \label{fig:walker2d_results_r_in}
 \end{figure}
 
@@ -333,7 +344,14 @@ In the MuJoCo tasks, the action space is continuous and the output of the invers
 
 \noindent\textbf{Raw Observation Features} (\text{Raw-Obs}) We also adopt a simple way to calculate the intrinsic reward as a baseline. The raw observations are used directly, where $\phi(s_{t})=s_{t}$. However, this method is subject to observation noises and cannot scale to high-dimensional inputs.
 
-In Figure~\ref{fig:walker2d_results}, we compare the performance of all feature embedding methods in the Walker2d task with and without delayed rewards. $\ourmethod$ achieves the best results in the standard and delayed reward settings, whereas the other two feature embedding methods have similar performance. It must be emphasised that during the training of the feature embedding module of $\ourmethod$, the {\em intrinsic} network is updated to maximise the {\em extrinsic} returns. In this way, the learned features are likely to help the agent explore in an appropriate direction, which not only increases the diversity between the states but also leads to higher extrinsic returns. For \text{Inv-Dyn} and \text{Raw-Obs}, the dissimilarity between the adjacent states is only used as an intrinsic reward but not attempting to maximise extrinsic returns. In this case, the agent will maximise the diversity regardless of its effect on overall performance in terms of the extrinsic returns.
+In Figure~\ref{fig:walker2d_results}, we compare the performance of all feature embedding methods in the Walker2d task with and without delayed rewards. $\ourmethod$ achieves the best results in the standard and delayed reward settings, whereas the other two feature embedding methods have similar performance. It must be emphasised that during the training of the feature embedding module of $\ourmethod$, the {\em intrinsic} network is updated to maximise the {\em extrinsic} returns. In this way, the learned features are likely to help the agent explore in an appropriate direction, which not only increases the diversity between the states but also leads to higher extrinsic returns. For \text{Inv-Dyn} and \text{Raw-Obs}, the dissimilarity between the adjacent states is only used as an intrinsic reward but not attempting to maximise extrinsic returns. In this case, the agent will maximise the diversity regardless of its effect on overall performance in terms of the extrinsic returns. For example, in Figure~\ref{fig:why_daim}, the agent selects an action in $s_{t}$, which causes it to fall into a trap in $s_{t+1}$. When the raw observation feature is used as the feature embedding method, the selected action leads to high diversity between the adjacent states, however the agent fails in this episode. Therefore, simply increasing diversity may not lead to better performance and it is necessary to learn the features that can better quantify the diversity between adjacent states to improve the task-specific performance (i.e., extrinsic returns) of the agent.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/chapter5/diversity_fail.pdf}
+    \caption{An example to show that higher diversity may not lead to better performance.}
+    \label{fig:why_daim}
+\end{figure}
 
 We also train the agents with only intrinsic rewards, and results are shown in Figure~\ref{fig:walker2d_results_r_in}. $\ourmethod$ outperforms \text{Inv-Dyn} and \text{Raw-Obs}, which shows that higher diversity does not necessarily lead to better performance. In the standard reward setting, $\ourmethod$ yields higher rewards than the other two embedding feature methods in 4 out of 5 tasks. In the Ant task, the agent trained with inverse dynamic features and raw observation features yields decreasing performance. This suggests that the intrinsic reward is not, on its own, sufficient to train the agent. However, the features learned by using bi-level optimisation help to maximise the extrinsic returns, showing better performance than the other two methods.
 
@@ -362,7 +380,7 @@ We also train the agents with only intrinsic rewards, and results are shown in F
     \includegraphics[width=\textwidth]{figures/chapter5/multi_frames/delay40.pdf}
     \caption{Delay=40}
   \end{subfigure}\hfill
-  \caption{The performance of using different size $k$ of consecutive states for calculating intrinsic rewards in the Walker2d task with standard and delayed reward settings.  The $y$-axis represents the average extrinsic rewards over the last 100 training episodes.} 
+  \caption[Results of using different length of consecutive states for calculating the intrinsic reward.]{The performance of using different size $k$ of consecutive states for calculating intrinsic rewards in the Walker2d task with standard and delayed reward settings.  The $y$-axis represents the average extrinsic rewards over the last 100 training episodes.} 
   \label{fig:multi_frames}
 \end{figure}
 
@@ -374,7 +392,7 @@ In this section, we further investigate the performance of $\ourmethod$ using di
 \end{equation}
 where, $k$ is the size of consecutive states for calculating the intrinsic reward.
 
-In Figure~\ref{fig:multi_frames}, we report on the performance of using different sizes of $k=\{2, 4, 8\}$ in calculating intrinsic rewards.  Specifically, $k=2$ represents the default setting of $\ourmethod$ which uses adjacent states for computing intrinsic rewards. From the plot, in the standard reward setting, $\ourmethod$ with different sizes $k$ achieves similar performance. In the delayed reward setting, when $k=8$, performance is worse, indicating that larger spans of consecutive states may not benefit the training. When $k=2$ or $k=4$, DAIM achieves comparable results. For Delay = 40, both $k=2$ and $k=4$ provide improvements over baselines PPO and VIME (see Figure~\ref{fig:mujoco_results}), with $k=2$ conveying the best advantage. \td{This may be due to the fact that two adjacent states can convey information about the direction and speed of the movement.} Therefore, $k=2$ was selected as the default setting for our experiments.
+In Figure~\ref{fig:multi_frames}, we report on the performance of using different sizes of $k=\{2, 4, 8\}$ in calculating intrinsic rewards.  Specifically, $k=2$ represents the default setting of $\ourmethod$ which uses adjacent states for computing intrinsic rewards. From the plot, in the standard reward setting, $\ourmethod$ with different sizes $k$ achieves similar performance. In the delayed reward setting, when $k=8$, performance is worse, indicating that larger spans of consecutive states may not benefit the training. When $k=2$ or $k=4$, DAIM achieves comparable results. For Delay = 40, both $k=2$ and $k=4$ provide improvements over baselines PPO and VIME (see Figure~\ref{fig:mujoco_results}), with $k=2$ conveying the best advantage. This may be due to the fact that two adjacent states can convey information about the direction and speed of the movement; this is sufficient to convey some advantage in training. Therefore, $k=2$ was selected as the default setting for our experiments.
 
 % \begin{figure}[t!]
 %     \centering
@@ -408,7 +426,7 @@ In Figure~\ref{fig:multi_frames}, we report on the performance of using differen
     \includegraphics[width=\textwidth]{figures/chapter5/atari_exp/SuperMarioBros.pdf}
     \caption{SuperMarioBros}
   \end{subfigure}\hfill
-  \caption{Comparison between $\ourmethod$ and baseline approaches (A2C and LIRPG) in the Atari and SuperMarioBros games. The $x$-axis represents the number of timesteps in the training. The $y$-axis represents the average extrinsic rewards over the last 100  training episodes. All experiments were run using 5 different seeds. The solid lines and shaded areas in the plots represent the mean values and the standard errors, respectively, over the different seeds.} 
+  \caption[Results of DAIM in the arcade learning environment.]{Comparison between $\ourmethod$ and baseline approaches (A2C and LIRPG) in the Atari and SuperMarioBros games. The $x$-axis represents the number of timesteps in the training. The $y$-axis represents the average extrinsic rewards over the last 100  training episodes. All experiments were run using 5 different seeds. The solid lines and shaded areas in the plots represent the mean values and the standard errors, respectively, over the different seeds.} 
   \label{fig:atari_result}
 \end{figure}
 
@@ -436,20 +454,30 @@ The explanation for the observations above is that the intrinsic rewards based o
          \bottomrule
     \end{tabular}
     }
-    \caption{Quantitative results comparison between DAIM and other baseline methods (A2C and LIRPG) in the Atari and SuperMarioBro games. In the table, it shows final average extrinsic rewards $\pm$ standard error across 5 different seeds of last 100 episodes in the training. The best and the second best results are (\textbf{bold}) and (\underline{underline}), respectively.}
+    \caption[Average reward of DAIM in the arcade learning environment in the final epoch during training.]{Quantitative results comparison between DAIM and other baseline methods (A2C and LIRPG) in the Atari and SuperMarioBro games. In the table, it shows final average extrinsic rewards $\pm$ standard error across 5 different seeds of last 100 episodes in the training. The best and the second best results are (\textbf{bold}) and (\underline{underline}), respectively.}
     \label{tab:atari}
 \end{table}
 
 \section{Discussion}
-In this chapter, the DPPs framework is employed to measure the diversity of state sequences; it is shown this can be used to create an intrinsic reward that encourages state-space exploration in on-policy learning; we term this variant diversity-augmented intrinsic motivation (DAIM). 
+\begin{table}[h!]
+    \centering
+    \resizebox{0.7\textwidth}{!}{
+    \begin{tabular}{c|c|c|c|c}
+    \toprule
+           & PPO~\cite{schulman2017proximal} & LIRPG~\cite{zheng2018learning} & VIME~\cite{NIPS2016_abd81528} & DAIM\\
+        \midrule
+        Time  & 00:28:50 & 1:23:43 & 03:18:36 & 01:26:21 \\
+        \bottomrule
+    \end{tabular}
+    }
+    \vspace{0.2em}
+    \caption[Training time comparison between DAIM and other baselines.]{Training time (hours:minutes:seconds) of DAIM and baseline approaches on the MuJoCo tasks.}
+    \label{tab:time_daim}
+\end{table}
 
-The update of the proposed intrinsic reward module is formulated as a bi-level optimisation problem. During training, as the agent tries to maximise intrinsic returns, the bi-level optimisation guarantees that extrinsic returns are also maximised. 
-
-Based on the extensive experiments, DAIM achieves improvements in continuous control in delayed-reward problems when compared to well-known on-policy training approaches of similar complexity, such as PPO~\cite{schulman2017proximal}, LIRPG~\cite{zheng2018learning} and VIME~\cite{NIPS2016_abd81528}.
-
-DAIM also accelerates the convergence of training agents on ALE compared to the baseline training approaches. In the work of this paper, DAIM is combined with PPO and A2C; in principle, DAIM could also be applied to other on-policy RL algorithms, such as TRPO~\cite{schulman2015trust} or SVPG~\cite{liu2017stein}. 
+In this chapter, the DPPs framework is employed to measure the diversity of state sequences; it is shown this can be used to create an intrinsic reward that encourages state-space exploration in on-policy learning; we term this variant diversity-augmented intrinsic motivation (DAIM). The update of the proposed intrinsic reward module is formulated as a bi-level optimisation problem. During training, as the agent tries to maximise mixture returns, the bi-level optimisation guarantees that extrinsic returns are also maximised. Based on the extensive experiments, DAIM achieves improvements in continuous control in delayed-reward problems when compared to well-known on-policy training approaches of similar complexity, such as LIRPG~\cite{zheng2018learning} and VIME~\cite{NIPS2016_abd81528}. Table~\ref{tab:time_daim} displays the training time of DAIM and other baselines on one MuJoCo task with a single random seed. From the table, DAIM requires longer training time than the vanilla PPO because of its bi-level optimisation steps. However, DAIM and other extension algorithms for PPO have similar training time, such as LIRPG and VIME. DAIM also accelerates the convergence of training agents on ALE compared to the baseline training approaches. In the work of this chapter, DAIM is combined with PPO and A2C; in principle, DAIM could also be applied to other on-policy RL algorithms, such as TRPO~\cite{schulman2015trust} or SVPG~\cite{liu2017stein}. 
 
 The wider implications of these experiments should be assessed against off-policy training approaches, e.g., the DQN~\cite{mnih2015human} for discrete control or DDPG~\cite{lillicrap2015continuous} for continuous control, which are considered more sample efficient than on-policy approaches. The advantage of on-policy RL algorithms is generally that they are more stable in training and are more robust to hyperparameter settings.
 
-In the future, we will investigate how to extend the DAIM approach to off-policy sampling and address more challenging tasks, such as Montezuma's Revenge.
+In the future, we will investigate how to extend the DAIM approach to off-policy sampling and address more challenging tasks, such as Montezuma's Revenge. Furthermore, we can also combine the self-imitation learning loss in Chapter~\ref{ch:esil} with the diversity-based intrinsic rewards to achieve a further improvement in tasks with a sparse reward setting.
 %with even sparser reward structure

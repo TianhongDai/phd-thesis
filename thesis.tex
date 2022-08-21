@@ -1,5 +1,6 @@
 \documentclass[a4paper,12pt,twoside]{report}
-\usepackage[left=2.5cm,right=2.5cm,top=2cm,bottom=3cm]{geometry}
+\usepackage[left=2cm,right=2cm,top=2cm,bottom=3cm]{geometry}
+%\usepackage[left=2.5cm,right=2.5cm,top=2cm,bottom=3cm]{geometry}
 % package that will be used
 \usepackage{booktabs}       % professional-quality tables
 %\usepackage{amsfonts}       % blackboard math symbols
@@ -24,8 +25,9 @@
 \usepackage{xcolor}
 \usepackage{pifont}
 \usepackage[figuresright]{rotating}
-\usepackage[hidelinks,colorlinks=true,linkcolor=blue,citecolor=blue]{hyperref}
-\usepackage{mathpazo}
+%\usepackage[hidelinks,colorlinks=true,linkcolor=cyan!50,citecolor=blue]{hyperref}
+\usepackage{hyperref}
+%\usepackage{mathpazo}
 %\usepackage{eulervm}
 
 %\usepackage{algpseudocode}
@@ -41,6 +43,9 @@
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 \newcommand{\td}[1]{\textcolor{red}{#1}}
+%\newcommand{\tds}[1]{\textcolor{purple}{#1}}
+
+\usepackage{minted}
 
 \include{thesis.preamble}
 % begin the document
@@ -52,7 +57,7 @@
 }
 
 \author{Tianhong Dai}
-\submitdate{April, 2022}
+\submitdate{August, 2022}
 
 \normallinespacing
 \maketitle
@@ -67,10 +72,11 @@
 \body
 \input{introduction/introduction}
 \input{background/background}
+% change the order
+\input{chapters/chapter6}
 \input{chapters/chapter3}
 \input{chapters/chapter4}
 \input{chapters/chapter5}
-\input{chapters/chapter_tmp}
 \input{conclusion/conclusion}
 
 \appendix

@@ -6,7 +6,7 @@
 % However, learning from a \textit{sparse} reward signal, where the only reward is provided upon the completion of a task, still remains difficult. An agent may rarely or never encounter positive examples from which to learn in a sparse-reward environment. Many domains therefore provide dense reward signals~\cite{brockman2016openai}, or practitioners may turn to reward shaping~\cite{ng1999theory}. Designing dense reward functions typically requires prior domain knowledge, making this approach difficult to generalise across different environments.
 
 % Fortunately, a common scenario is goal-oriented RL, where the RL agent is tasked with solving different goals within the same environment~\cite{kaelbling1993learning,schaul2015universal}. Even if each task has a sparse reward, the agent ideally \textit{generalises} across goals, making the learning process easier. For example, in a robotic manipulation task, the goal during a single episode would be to achieve a specific position of a target object.
-In the last chapter, we have successfully combined hindsight goal relabelling with a state-of-the-art on-policy RL algorithm and introduced a new goal-oriented RL method -- episodic self-imitation learning (ESIL). Although the experiments show the effectiveness of the proposed method, ESIL still has worse sample efficiency than the vanilla hindsight experience replay (i.e., DDPG+HER). This is because DDPG is an off-policy RL algorithm, and it employs a replay buffer to store transitions during training, which enables the usage of past experiences. In this chapter, we focus on finding the shortcoming of HER and improving it to elevate learning efficiency and performance.
+In the last chapter, we successfully combined hindsight goal relabelling with a state-of-the-art on-policy RL algorithm and introduced a new goal-oriented RL method -- episodic self-imitation learning (ESIL). In ESIL, a novel self-imitation learning loss is used to accelerate the training by using the hindsight experience. Although the experiments show the effectiveness of the proposed method, ESIL still has worse sample efficiency than the vanilla hindsight experience replay (i.e., DDPG+HER). This is because DDPG is an off-policy RL algorithm, and it employs a replay buffer to store transitions during training, which enables the usage of past experiences. In this chapter, we focus on finding the shortcoming of HER and improving it to elevate learning efficiency and performance by proposing a new sampling strategy.
 
 As a recap, hindsight experience replay (HER)~\cite{andrychowicz2017hindsight} is proposed to improve the learning efficiency of goal-oriented RL agents in sparse reward settings: when past experiences are replayed to train the agent, the desired goal is replaced (in ``hindsight'') with the achieved goal, generating many positive experiences. For example, in a robot manipulation task, the goal during a single episode would be to achieve a specific position of a target object. After applying HER, the desired target position would be overwritten with the achieved target position, with the achieved reward also being modified correspondingly.
 
@@ -14,7 +14,7 @@ We note that HER, whilst it enables solutions to previously unsolved tasks, can 
 \begin{figure}[h]
     \centering
     \includegraphics[width=\textwidth]{figures/chapter4/illustration_DTGSH_latest.pdf}
-    \caption{Overview of DTGSH. Every time a new episode is completed, its diversity is calculated, and it is stored in the episodic replay buffer. During training, $m$ episodes are sampled according to their diversity-based priority, and then $k$ diverse, hindsight-relabelled transitions are sampled using a $k$-DPP~\cite{kulesza2011k}.}
+    \caption[Overview of DTGSH.]{Overview of DTGSH. Every time a new episode is completed, its diversity is calculated, and it is stored in the episodic replay buffer. During training, $m$ episodes are sampled according to their diversity-based priority, and then $k$ diverse, hindsight-relabelled transitions are sampled using a $k$-DPP~\cite{kulesza2011k}.}
     \label{fig:illustration_c4}
 \end{figure}
 
@@ -28,6 +28,39 @@ CHER~\cite{fang2019curriculum} dynamically controls the sampling of transitions 
 Other work has expanded HER in orthogonal directions. Hindsight policy gradient \cite{rauber2018hindsight} and episodic self-imitation learning~\cite{dai2020episodic} apply HER to improve the efficiency of goal-oriented on-policy algorithms. Dynamic HER~\cite{fang2018dher} and competitive ER~\cite{liu2018competitive} expand HER to the dynamic goal and multi-agent settings, respectively.
 
 The use of DPPs in RL has been more limited, with applications towards modelling value functions of sets of agents in multiagent RL~\cite{osogami2019determinantal,pmlr-v119-yang20i}, and most closely related to us, finding diverse policies~\cite{parker2020effective}.
+
+% \begin{table}[h]
+%     \centering
+%     \resizebox{\textwidth}{!}{
+%     \begin{tabular}{c|c@{\hskip 0.1in}|c@{\hskip 0.1in}|c|c}
+%     \toprule
+%          & DDPG+HER~\cite{andrychowicz2017hindsight} & DDPG+HEBP~\cite{zhao2018energy} & DDPG+CHER~\cite{fang2019curriculum} & DDPG+DTGSH (Ours) \\
+%         \midrule
+%         Sampling Strategy (Trajectory) & & & & \\
+%         Sampling Strategy (Transition) & & & & \\
+%         \bottomrule
+%     \end{tabular}
+%     }
+%     \vspace{0.2em}
+%     \caption[Average success rate of DTGSH and other baselines in the final epoch during training.]{Final mean success rate $\pm$ standard deviation, with best results in \textbf{bold}.}
+%     %\vspace{-14mm}
+%     \label{tab:benchmark}
+% \end{table}
+
+\begin{table}[h]
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|c|c|}
+\hline
+& DDPG+HER~\cite{andrychowicz2017hindsight} & DDPG+HEBP~\cite{zhao2018energy} & DDPG+CHER~\cite{fang2019curriculum} \\ \hline
+\begin{tabular}[c]{@{}c@{}}Sampling Strategy\\       (Trajectory)\end{tabular} & uniform  & \begin{tabular}[c]{@{}c@{}}according to the energy\\ of each trajectory\end{tabular} & uniform                                                                                                \\ \hline
+\begin{tabular}[c]{@{}c@{}}Sampling Strategy\\ (Transition)\end{tabular}       & uniform  & uniform                                                                              & \begin{tabular}[c]{@{}c@{}}according to the proximity and \\ diversity of candidate goals\end{tabular} \\ \hline
+\end{tabular}
+}
+\caption[Comparison of sampling strategies between different HER related methods.]{The comparison of sampling strategies between HER related methods.}
+\label{tab:sample_strategy}
+\end{table}
+
+We further use Table~\ref{tab:sample_strategy} to summarize the sampling strategies of baseline HER related algorithms in this chapter. Although HEBP~\cite{zhao2018energy} and CHER~\cite{fang2019curriculum} improve the sample efficiency of HER by proposing new sampling strategies, these methods still use uniform sampling strategy for either trajectory or transition selection, which may sample redundant trajectories and transitions, and thus limit the performance. In contrast to these methods, in DTGSH, the sampling strategies for both trajectory and transition are improved, which increase the chance to sample trajectories and transitions that contribute more to the training.
 
 \section{Methodology}
 We now formally describe the two main components of our method, DTGSH: 1) a diversity-based trajectory selection module to sample valuable trajectories for the further goal selection, and 2) a diversity-based goal selection module to select transitions with diverse goal states from the previously selected trajectories. Together, these select informative transitions from a large area of the goal space, improving the agent's ability to learn and generalise.
@@ -50,7 +83,7 @@ where $\mathbf{L}_{\tau_{j}}$ is the kernel matrix of partial trajectory $\tau_{
 \begin{equation}
     L_{\tau_{j}} = \mathbf{M}^{T}\mathbf{M},
 \end{equation}
-and $\mathbf{M}=[\hat{g}^{ac}_{n}, \hat{g}^{ac}_{n+1}, \cdots, \hat{g}^{ac}_{n+b-1}]$, where each $\hat{g}^{ac}$ is the $\ell_2$-normalised version of the achieved goal $g^{ac}$~\cite{kulesza2011k}. Finally, the diversity $d_\Tau$ of trajectory $\Tau$ is the sum of the diversity of its $N_p$ constituent partial trajectories:
+and $\mathbf{M}=[\hat{g}^{ac}_{n}, \hat{g}^{ac}_{n+1}, \cdots, \hat{g}^{ac}_{n+b-1}]$, where each $\hat{g}^{ac}$ is the $\ell_2$-normalised vector of the achieved goal $g^{ac}$~\cite{kulesza2011k}. Finally, the diversity $d_\Tau$ of trajectory $\Tau$ is the sum of the diversity of its $N_p$ constituent partial trajectories:
 \begin{equation}
     d_\Tau = \sum_{j=1}^{N_{p}} d_{\tau_{j}}.
 \label{eq:total_div}
@@ -81,7 +114,7 @@ $k$-DPPs are more appropriate for goal selection with a minibatch of fixed size 
         \caption{Kernel density estimation of the distributions of goals. $k$-DPP leads to a more uniform selection of goals over the support of the goal space.}
         \label{fig:kde}
     \end{subfigure}
-    \caption{Visualisation of $k=32$ goals selected from $m=100$ candidate goals of the Push task using either uniform sampling or $k$-DPP sampling, respectively. The candidate goals are distributed over a 2D ($xy$) space. Note that  $k$-DPP sampling (right hand plots) results in a broader span of selected goals in $xy$ space compared to uniform sampling (left hand plots).}
+    \caption[Visualisation of goal selection between uniform sampling and $k$-DPP sampling.]{Visualisation of $k=32$ goals selected from $m=100$ candidate goals of the Push task using either uniform sampling or $k$-DPP sampling, respectively. The candidate goals are distributed over a 2D ($xy$) space. Note that  $k$-DPP sampling (right hand plots) results in a broader span of selected goals in $xy$ space compared to uniform sampling (left hand plots).}
 \end{figure}
 
 % pseudo code of dpp-sampling
@@ -173,7 +206,7 @@ We evaluate our proposed method, and compare it with current state-of-the-art HE
     \caption{PenRotate}
     \label{subfig:env_handpen}
   \end{subfigure}\hfill
-  \caption{Robot manipulation environments. (a-b) use the Fetch robot, and (c-e) use the Shadow Dexterous Hand.} 
+  \caption[Evaluation environments of DTGSH.]{Robot manipulation environments. (a-b) use the Fetch robot, and (c-e) use the Shadow Dexterous Hand.} 
   \label{fig:env_c4}
 \end{figure}
 
@@ -192,7 +225,7 @@ We base our training setup on CHER~\cite{fang2019curriculum}. We train all agent
 \subsection{Results on Benchmark Environments}
 We compare DTGSH to DDPG~\cite{lillicrapContinuous}, DDPG+HER~\cite{andrychowicz2017hindsight}, DDPG+HEBP~\cite{zhao2018energy} and DDPG+\\CHER~\cite{fang2019curriculum}. Evaluation results are given based on repeated runs with 5 different seeds; we plot the median success rate with upper and lower bounds given by the \nth{75} and \nth{25} percentiles, respectively.
 
-\begin{figure}
+\begin{figure}[H]
 \centering
   \begin{subfigure}[t]{0.49\textwidth}
     \includegraphics[width=\textwidth]{figures/chapter4/FetchPush-v1.pdf}
@@ -222,7 +255,7 @@ We compare DTGSH to DDPG~\cite{lillicrapContinuous}, DDPG+HER~\cite{andrychowicz
 %   \begin{subfigure}[t]{0.49\textwidth}
 %     \includegraphics[width=\textwidth]{figures/chapter4/blank.png}
 %   \end{subfigure}\hfill
-  \caption{Success rate of DTGSH and baseline approaches. \td{DDPG+DTGSH outpeforms other baselines in all tasks, and without using HER, DDGP cannot even complete the simple Reach task.}} 
+  \caption[Results of DTGSH in the robotic manipulation environment.]{Success rate of DTGSH and baseline approaches. DDPG+DTGSH outperforms other baselines in all tasks, and without using HER, DDGP cannot even complete the simple Reach task.}
   \label{fig:baseline_compare_c4}
 \end{figure}
 
@@ -244,7 +277,7 @@ Figure~\ref{fig:baseline_compare_c4} and Table~\ref{tab:benchmark} show the perf
     \end{tabular}
     }
     \vspace{0.2em}
-    \caption{Final mean success rate $\pm$ standard deviation, with best results in \textbf{bold}.}
+    \caption[Average success rate of DTGSH and other baselines in the final epoch during training.]{Final mean success rate $\pm$ standard deviation, with best results in \textbf{bold}.}
     %\vspace{-14mm}
     \label{tab:benchmark}
 \end{table}
@@ -281,7 +314,7 @@ In this section, we perform the following experiments to investigate the effecti
 %   \begin{subfigure}[t]{0.33\textwidth}
 %     \includegraphics[width=\textwidth]{figures/chapter4/blank.png}
 %   \end{subfigure}\hfill
-  \caption{Success rate of HER, DTGSH, and ablations DTSH and DGSH. \td{From the results, DTSH outperforms DDPG+HER in all tasks, which verify the efficiency that selecting trajectories with diverse achieved goals for training. DGSH also has better performance than DDPG+HER in three tasks. By combining these two modules together, DTGSH achieves the best performance.} } 
+  \caption[Results of ablation studies of different modules.]{Success rate of HER, DTGSH, and ablations DTSH and DGSH. From the results, DTSH outperforms DDPG+HER in all tasks, which verify the efficiency that selecting trajectories with diverse achieved goals for training. DGSH also has better performance than DDPG+HER in three tasks. By combining these two modules together, DTGSH achieves the best performance.}
   \label{fig:ablation1}
 \end{figure}
 
@@ -317,14 +350,18 @@ Figure~\ref{fig:ablation1} shows the performance of using DTSH and DGSH independ
 %   \begin{subfigure}[t]{0.33\textwidth}
 %     \includegraphics[width=\textwidth]{figures/chapter4/blank.png}
 %   \end{subfigure}\hfill
-  \caption{Success rate of DTGSH with different partial trajectory lengths $b$ and different candidate goal set sizes $m$. \td{From the results, when $b \gg 2$, the performance degrades in all tasks. When $m \gg 100$, the performance degrades in the Shadow Dexterous Hand environment.}} 
+  \caption[Results of ablation studies of different parameters of each module.]{Success rate of DTGSH with different partial trajectory lengths $b$ and different candidate goal set sizes $m$. From the results, when $b \gg 2$, the performance degrades in all tasks. When $m \gg 100$, the performance degrades in the Shadow Dexterous Hand environment.}
   \label{fig:ablation2}
 \end{figure}
 
 Figure~\ref{fig:ablation2} shows the performance of DDPG+DTGSH with different partial trajectory lengths $b$ and different candidate goal set sizes $m$. In this work, we use $b = 2$ and $m = 100$ as the defaults. Performance degrades with $b \gg 2$, indicating that pairwise diversity is the best for learning in our method. $m \gg 100$ does not affect performance in the Fetch environment, but degrades performance in the Shadow Dexterous Hand environment.
 
-\subsection{Time Complexity}
-Table~\ref{tab:time} gives example training times of all of the HER-based algorithms. DTGSH requires an additional calculation of the diversity score of $\mathcal{O}(N_{p}b^3)$ at the end of every training episode, and sampling of $\mathcal{O}(mk^2)$ for each minibatch.
+%\subsection{Time Complexity}
+% Table~\ref{tab:time} gives example training times of all of the HER-based algorithms. DTGSH requires an additional calculation of the diversity score of $\mathcal{O}(N_{p}b^3)$ at the end of every training episode, and sampling of $\mathcal{O}(mk^2)$ for each minibatch.
+
+\section{Discussion}
+In this chapter, we introduced diversity-based trajectory and goal selection with hindsight experience replay (DTGSH) to improve the learning efficiency of goal-orientated RL agents in sparse reward settings. Our method can be divided into two stages: 1) valuable trajectories are selected according to diversity-based priority, as modelled by determinantal point processes (DPPs)~\cite{kulesza2012determinantal}, and 2) $k$-DPPs~\cite{kulesza2011k} are leveraged to sample transitions with diverse goal states from previously selected trajectories for training. Our experiments empirically show that DTGSH achieves faster learning and higher final performance in five challenging robot manipulation tasks, compared to previous state-of-the-art approaches~\cite{andrychowicz2017hindsight,fang2019curriculum,zhao2018energy}. In addition, unlike prior extensions of hindsight experience replay, DTGSH does not require semantic knowledge of the goal space~\cite{zhao2018energy}, and does not require tuning a curriculum~\cite{fang2019curriculum}.
+
 \begin{table}[h!]
     \centering
     \resizebox{0.85\textwidth}{!}{
@@ -337,9 +374,10 @@ Table~\ref{tab:time} gives example training times of all of the HER-based algori
     \end{tabular}
     }
     \vspace{0.2em}
-    \caption{Training time (hours:minutes:seconds) of DTGSH and baseline approaches on the Push task for 50 epochs.}
+    \caption[Training time comparison between DTGSH and other baselines.]{Training time (hours:minutes:seconds) of DTGSH and baseline approaches on the Push task for 50 epochs.}
     \label{tab:time}
 \end{table}
 
-\section{Discussion}
-In this chapter, we introduced diversity-based trajectory and goal selection with hindsight experience replay (DTGSH) to improve the learning efficiency of goal-orientated RL agents in sparse reward settings. Our method can be divided into two stages: 1) valuable trajectories are selected according to diversity-based priority, as modelled by determinantal point processes (DPPs)~\cite{kulesza2012determinantal}, and 2) $k$-DPPs~\cite{kulesza2011k} are leveraged to sample transitions with diverse goal states from previously selected trajectories for training. Our experiments empirically show that DTGSH achieves faster learning and higher final performance in five challenging robot manipulation tasks, compared to previous state-of-the-art approaches~\cite{andrychowicz2017hindsight,fang2019curriculum,zhao2018energy}. Furthermore, unlike prior extensions of hindsight experience replay, DTGSH does not require semantic knowledge of the goal space~\cite{zhao2018energy}, and does not require tuning a curriculum~\cite{fang2019curriculum}.
+Furthermore, Table~\ref{tab:time} gives example training times of all of the HER-based algorithms. From the table, HER requires the minimum time, because it only uses the naive uniform sampling strategy for both trajectory and transition. HEBP needs a bit more training time than HER, because it requires additional computation for the energy of each trajectory. CHER displays the longest training time, because it requires an inefficient greedy algorithm~\cite{fang2019curriculum} for the sampling according to the proximity and diversity of candidate goals. DTGSH is more efficient than CHER, but slower than the other two methods. It needs an additional calculation of the diversity score of $\mathcal{O}(N_{p}b^3)$ at the end of every training episode, and sampling of $\mathcal{O}(mk^2)$ for each minibatch. Although DTGSH has better sample efficiency than other baselines, it needs a longer training period. In the future, we will improve the method towards achieving the balance between performance and time complexity.
+
+There are still several limitations in some of the experiments, where the models do not have sufficient training time to converge in Figure~\ref{fig:ablation1}c and Figure~\ref{fig:ablation1}d. There are two main reasons for this, on the one hand we use the same experimental setup as CHER~\cite{fang2019curriculum} for fair comparison and on the other hand we do not have enough computing resources to complete training with more epochs. In this chapter, it took us more than one month to finish these experiments. In the future, once we have enough computing resources, we will re-evaluate the method for longer training epochs.
